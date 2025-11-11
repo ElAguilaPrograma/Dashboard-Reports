@@ -1,0 +1,65 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+     (click)="cerrar()">
+  <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" 
+       (click)="$event.stopPropagation()">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">Configurar Gráfica</h3>
+
+    <!-- Tipo de Gráfica -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Tipo de Gráfica
+      </label>
+      <div class="flex gap-4">
+        <button (click)="tipoGrafica = 'bar'"
+                [class.border-blue-500]="tipoGrafica === 'bar'"
+                [class.bg-blue-50]="tipoGrafica === 'bar'"
+                [class.border-gray-200]="tipoGrafica !== 'bar'"
+                class="flex-1 flex flex-col items-center p-3 rounded-lg border-2 transition-colors">
+          <span class="text-2xl mb-2">📊</span>
+          <span class="text-sm">Barras</span>
+        </button>
+        <button (click)="tipoGrafica = 'line'"
+                [class.border-blue-500]="tipoGrafica === 'line'"
+                [class.bg-blue-50]="tipoGrafica === 'line'"
+                [class.border-gray-200]="tipoGrafica !== 'line'"
+                class="flex-1 flex flex-col items-center p-3 rounded-lg border-2 transition-colors">
+          <span class="text-2xl mb-2">📈</span>
+          <span class="text-sm">Líneas</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Selección de Columnas -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Columnas (seleccione al menos 2)
+      </label>
+      <div class="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2">
+        <label *ngFor="let header of headers; let i = index"
+               class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+          <input type="checkbox"
+                 [checked]="isColumnSelected(i)"
+                 (change)="toggleColumna(i)"
+                 class="mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+          <span class="text-sm text-gray-700">{{header}}</span>
+        </label>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        Seleccionadas: {{columnasSeleccionadas.length}}
+      </p>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex gap-3">
+      <button (click)="cerrar()"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="crearGrafica()"
+              [disabled]="columnasSeleccionadas.length < 2"
+              class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Crear Gráfica
+      </button>
+    </div>
+  </div>
+</div>

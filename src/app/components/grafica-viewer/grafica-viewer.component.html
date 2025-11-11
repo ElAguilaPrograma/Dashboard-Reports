@@ -1,0 +1,24 @@
+<div class="bg-white rounded-lg shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-800">
+        Gráfica de {{grafica.nombreExcel}}
+      </h3>
+      <p class="text-sm text-gray-500">
+        Tipo: {{grafica.tipo === 'bar' ? 'Barras' : 'Líneas'}}
+      </p>
+    </div>
+    <button (click)="eliminar()"
+            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+      🗑️ Eliminar
+    </button>
+  </div>
+  
+  <div style="height: 400px;">
+    <canvas baseChart
+            [type]="chartType"
+            [data]="chartData"
+            [options]="chartOptions">
+    </canvas>
+  </div>
+</div>

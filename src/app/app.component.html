@@ -1,0 +1,194 @@
+<div class="flex h-screen bg-gray-100">
+  <!-- Sidebar -->
+  <div class="w-80 bg-white shadow-lg overflow-y-auto">
+    <!-- Tabs Plantas -->
+    <div class="flex border-b">
+      <button *ngFor="let planta of plantas; let i = index"
+              (click)="plantaActiva = i"
+              [class.bg-blue-500]="plantaActiva === i"
+              [class.text-white]="plantaActiva === i"
+              [class.bg-gray-100]="plantaActiva !== i"
+              class="flex-1 py-3 px-4 text-sm font-medium">
+        {{planta.nombre}}
+      </button>
+    </div>
+
+    <!-- Niveles -->
+    <div class="p-4">
+      <div *ngFor="let nivel of plantas[plantaActiva]?.niveles; let ni = index" 
+           class="mb-2">
+        <button (click)="toggleNivel(ni)"
+                class="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg">
+          <span class="font-semibold">{{nivel.titulo}}</span>
+          <span>{{nivel.collapsed ? '▶' : '▼'}}</span>
+        </button>
+
+        <div *ngIf="!nivel.collapsed" class="ml-4 mt-2 space-y-1">
+          <button *ngFor="let subnivel of nivel.subniveles; let si = index"
+                  (click)="seleccionarSubnivel(ni, si)"
+                  [class.bg-blue-100]="subnivelSeleccionado?.nivelIndex === ni && subnivelSeleccionado?.subnivelIndex === si"
+                  class="w-full text-left p-2 rounded hover:bg-gray-100 text-sm">
+            {{subnivel.titulo || 'Subnivel ' + subnivel.id}}
+            <span *ngIf="subnivel.archivosExcel.length > 0" 
+                  class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+              {{subnivel.archivosExcel.length}} Excel
+            </span>
+            <span *ngIf="subnivel.imagenes.length > 0" 
+                  class="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+              {{subnivel.imagenes.length}} Img
+            </span>
+            <span *ngIf="subnivel.graficas && subnivel.graficas.length > 0" 
+                  class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+              {{subnivel.graficas.length}} Graf
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Área contenido -->
+  <div class="flex-1 overflow-y-auto p-8">
+    <div *ngIf="subnivelActual" class="max-w-4xl mx-auto">
+      <h2 class="text-2xl font-bold mb-6">
+        {{plantas[plantaActiva].nombre}} - Subnivel {{subnivelActual.id}}
+      </h2>
+
+      <!-- Formulario -->
+      <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2">Título</label>
+          <input [(ngModel)]="subnivelActual.titulo"
+                 (ngModelChange)="guardarCambios()"
+                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                 placeholder="Ingrese el título">
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2">Descripción</label>
+          <textarea [(ngModel)]="subnivelActual.descripcion"
+                    (ngModelChange)="guardarCambios()"
+                    rows="4"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ingrese la descripción"></textarea>
+        </div>
+
+        <!-- Carga Excel -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2">Archivos Excel</label>
+          <label class="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50">
+            <span class="text-sm text-gray-600">📊 Cargar archivo Excel</span>
+            <input type="file" 
+                   accept=".xlsx,.xls" 
+                   (change)="onExcelSelected($event)"
+                   class="hidden">
+          </label>
+        </div>
+
+        <!-- Carga Imágenes -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Imágenes</label>
+          <label class="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50">
+            <span class="text-sm text-gray-600">🖼️ Cargar imágenes</span>
+            <input type="file" 
+                   accept="image/*" 
+                   multiple
+                   (change)="onImagenesSelected($event)"
+                   class="hidden">
+          </label>
+        </div>
+      </div>
+
+      <!-- Galería de Imágenes -->
+      <div *ngIf="subnivelActual.imagenes.length > 0" class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4">Imágenes ({{subnivelActual.imagenes.length}})</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div *ngFor="let imagen of subnivelActual.imagenes; let i = index" class="relative group">
+            <img [src]="imagen.datos" 
+                 [alt]="imagen.nombre"
+                 class="w-full h-48 object-cover rounded-lg">
+            <button (click)="eliminarImagen(i)"
+                    class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-all">
+              Eliminar
+            </button>
+            <p class="text-xs text-gray-600 mt-2 truncate">{{imagen.nombre}}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tablas Excel -->
+      <div *ngIf="subnivelActual.archivosExcel.length > 0" class="space-y-6">
+        <div *ngFor="let excel of subnivelActual.archivosExcel; let ei = index" 
+             class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-semibold">{{excel.nombre}}</h3>
+              <p class="text-sm text-gray-500">
+                {{excel.datos.length - 1}} filas × {{excel.datos[0]?.length}} columnas
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <button (click)="abrirModalGrafica(ei)"
+                      class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                📊 Generar Gráfica
+              </button>
+              <button (click)="eliminarExcel(ei)"
+                      class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                Eliminar
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th *ngFor="let header of excel.datos[0]"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    {{header}}
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let fila of excel.datos.slice(1)">
+                  <td *ngFor="let celda of fila"
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{celda}}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficas -->
+      <div *ngIf="subnivelActual.graficas && subnivelActual.graficas.length > 0" 
+           class="space-y-6 mt-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">
+          Gráficas Generadas ({{subnivelActual.graficas.length}})
+        </h3>
+        <app-grafica-viewer *ngFor="let grafica of subnivelActual.graficas; let i = index"
+                            [grafica]="grafica"
+                            [index]="i"
+                            (onEliminar)="eliminarGrafica($event)">
+        </app-grafica-viewer>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando no hay subnivel seleccionado -->
+    <div *ngIf="!subnivelActual" class="flex items-center justify-center h-full">
+      <div class="text-center text-gray-500">
+        <p class="text-lg">📄 Seleccione un subnivel para comenzar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Gráfica -->
+<app-modal-grafica *ngIf="mostrarModalGrafica && subnivelActual"
+                   [excel]="subnivelActual.archivosExcel[excelIndexSeleccionado]"
+                   [excelIndex]="excelIndexSeleccionado"
+                   (onCrear)="crearGrafica($event)"
+                   (onCerrar)="cerrarModalGrafica()">
+</app-modal-grafica>
