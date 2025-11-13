@@ -115,16 +115,62 @@ export class AppComponent implements OnInit {
     if (!this.subnivelActual) return;
 
     const excel = this.subnivelActual.archivosExcel[config.excelIndex];
+    if (!excel || !excel.datos || excel.datos.length === 0) {
+      alert('Error: El archivo Excel no tiene datos válidos');
+      return;
+    }
+
     const headers = excel.datos[0];
-    const filas = excel.datos.slice(1);
+    const filas = excel.datos.slice(1).filter(fila => fila && fila.length > 0); // Filtrar filas vacías
+
+    if (filas.length === 0) {
+      alert('Error: No hay datos válidos en el archivo Excel');
+      return;
+    }
+
+    // Función auxiliar para convertir valores a números cuando sea posible
+    const convertirValor = (valor: any): any => {
+      if (valor === null || valor === undefined || valor === '') {
+        return null;
+      }
+      // Intentar convertir a número
+      const num = Number(valor);
+      if (!isNaN(num) && isFinite(num)) {
+        return num;
+      }
+      // Si no es número, devolver el valor original (para labels)
+      return valor;
+    };
 
     const datosGrafica = filas.map(fila => {
       const obj: any = {};
       config.columnas.forEach(colIndex => {
-        obj[headers[colIndex]] = fila[colIndex];
+        const header = headers[colIndex];
+        const valor = fila[colIndex];
+        // La primera columna se mantiene como string (label), las demás se convierten a número
+        if (colIndex === config.columnas[0]) {
+          obj[header] = valor !== null && valor !== undefined ? String(valor) : '';
+        } else {
+          obj[header] = convertirValor(valor);
+        }
       });
       return obj;
     });
+
+    // Validar que hay datos válidos
+    const primeraColumna = headers[config.columnas[0]];
+    const datosValidos = datosGrafica.filter(row => {
+      // Verificar que al menos una columna de datos (no la primera) tenga valores numéricos
+      return config.columnas.slice(1).some(colIndex => {
+        const header = headers[colIndex];
+        return row[header] !== null && row[header] !== undefined && typeof row[header] === 'number';
+      });
+    });
+
+    if (datosValidos.length === 0) {
+      alert('Error: No se encontraron datos numéricos válidos en las columnas seleccionadas');
+      return;
+    }
 
     if (!this.subnivelActual.graficas) {
       this.subnivelActual.graficas = [];
@@ -132,7 +178,7 @@ export class AppComponent implements OnInit {
 
     this.subnivelActual.graficas.push({
       tipo: config.tipo,
-      datos: datosGrafica,
+      datos: datosValidos,
       columnas: config.columnas.map(i => headers[i]),
       excelIndex: config.excelIndex,
       nombreExcel: excel.nombre

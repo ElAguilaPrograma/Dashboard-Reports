@@ -3,6 +3,10 @@ import { BrowserModule } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
+import { Chart, registerables } from 'chart.js';
+
+// Registrar todos los módulos de Chart.js
+Chart.register(...registerables);
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';

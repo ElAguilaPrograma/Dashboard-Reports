@@ -27,25 +27,68 @@ export class GraficaViewerComponent implements OnInit {
   ];
 
   ngOnInit() {
+    if (!this.grafica) {
+      console.error('No se proporcionó una gráfica válida');
+      return;
+    }
     this.chartType = this.grafica.tipo;
     this.prepararDatos();
     this.configurarOpciones();
   }
 
   private prepararDatos() {
-    const datasets = this.grafica.columnas.slice(1).map((col, index) => ({
-      label: col,
-      data: this.grafica.datos.map(row => row[col]),
-      backgroundColor: this.chartType === 'bar' 
-        ? this.colores[index % this.colores.length]
-        : 'transparent',
-      borderColor: this.colores[index % this.colores.length],
-      borderWidth: 2,
-      fill: false
-    }));
+    if (!this.grafica || !this.grafica.datos || this.grafica.datos.length === 0) {
+      console.error('No hay datos para la gráfica');
+      this.chartData = {
+        labels: [],
+        datasets: []
+      };
+      return;
+    }
+
+    if (!this.grafica.columnas || this.grafica.columnas.length < 2) {
+      console.error('No hay suficientes columnas para la gráfica');
+      this.chartData = {
+        labels: [],
+        datasets: []
+      };
+      return;
+    }
+
+    // Primera columna es para los labels
+    const labelColumn = this.grafica.columnas[0];
+    const labels = this.grafica.datos.map(row => {
+      const label = row[labelColumn];
+      return label !== null && label !== undefined ? String(label) : '';
+    });
+
+    // Resto de columnas son para los datos
+    const datasets = this.grafica.columnas.slice(1).map((col, index) => {
+      const data = this.grafica.datos.map(row => {
+        const valor = row[col];
+        // Convertir a número si es posible
+        if (valor === null || valor === undefined || valor === '') {
+          return 0; // Usar 0 en lugar de null para mantener la longitud
+        }
+        const num = Number(valor);
+        return !isNaN(num) && isFinite(num) ? num : 0;
+      });
+
+      return {
+        label: col,
+        data: data,
+        backgroundColor: this.chartType === 'bar' 
+          ? this.colores[index % this.colores.length] + '80' // Agregar transparencia
+          : 'transparent',
+        borderColor: this.colores[index % this.colores.length],
+        borderWidth: 2,
+        fill: this.chartType === 'line' ? false : undefined,
+        tension: this.chartType === 'line' ? 0.4 : undefined
+      };
+    });
 
     this.chartData = {
-      labels: this.grafica.datos.map(row => row[this.grafica.columnas[0]]),
+      labels: labels,
       datasets: datasets
     };
   }
@@ -60,12 +103,23 @@ export class GraficaViewerComponent implements OnInit {
           position: 'top'
         },
         tooltip: {
-          enabled: true
+          enabled: true,
+          mode: 'index',
+          intersect: false
         }
       },
       scales: {
         y: {
-          beginAtZero: true
+          beginAtZero: true,
+          ticks: {
+            precision: 2
+          }
+        },
+        x: {
+          ticks: {
+            maxRotation: 45,
+            minRotation: 0
+          }
         }
       }
     };
