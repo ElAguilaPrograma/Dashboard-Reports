@@ -2,7 +2,7 @@
   <div class="flex items-center justify-between mb-4">
     <div>
       <h3 class="text-lg font-semibold text-gray-800">
-        Gráfica de {{grafica.nombreExcel}}
+        {{grafica.tituloPersonalizado || ('Gráfica de ' + grafica.nombreExcel)}}
       </h3>
       <p class="text-sm text-gray-500">
         Tipo: {{grafica.tipo === 'bar' ? 'Barras' : 'Líneas'}}

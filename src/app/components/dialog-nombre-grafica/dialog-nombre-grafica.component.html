@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>Nombre de la gráfica</h2>
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Nombre para mostrar</mat-label>
+    <input matInput [(ngModel)]="nombreElemento" 
+           placeholder="Ingrese el nombre para mostrar"
+           (keyup.enter)="onConfirm()"
+           autofocus>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" 
+          [disabled]="!nombreElemento.trim()"
+          (click)="onConfirm()">
+    Confirmar
+  </button>
+</mat-dialog-actions>
+

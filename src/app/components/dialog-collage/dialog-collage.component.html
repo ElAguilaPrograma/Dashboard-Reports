@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>Crear Collage de Imágenes</h2>
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="w-full mb-4">
+    <mat-label>Nombre del collage</mat-label>
+    <input matInput [(ngModel)]="nombreElemento" 
+           placeholder="Ingrese el nombre para el collage"
+           autofocus>
+  </mat-form-field>
+
+  <p class="text-sm text-gray-600 mb-3">
+    Seleccione al menos 2 imágenes ({{imagenesSeleccionadas.length}} seleccionadas):
+  </p>
+  
+  <div class="grid grid-cols-3 md:grid-cols-4 gap-4 max-h-96 overflow-y-auto p-2">
+    <div *ngFor="let imagen of imagenes; let i = index" 
+         (click)="toggleImagen(i)"
+         [class.selected]="esImagenSeleccionada(i)"
+         class="relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:scale-105"
+         [class.border-purple-500]="esImagenSeleccionada(i)"
+         [class.border-gray-200]="!esImagenSeleccionada(i)">
+      <img [src]="imagen.datos" 
+           [alt]="imagen.nombre"
+           class="w-full h-32 object-cover">
+      <div *ngIf="esImagenSeleccionada(i)" 
+           class="absolute top-2 right-2 bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+        ✓
+      </div>
+      <p class="text-xs text-gray-600 p-2 truncate">{{imagen.nombre}}</p>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" 
+          [disabled]="imagenesSeleccionadas.length < 2 || !nombreElemento.trim()"
+          (click)="onConfirm()">
+    Crear Collage ({{imagenesSeleccionadas.length}} imágenes)
+  </button>
+</mat-dialog-actions>
+

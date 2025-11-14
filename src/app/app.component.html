@@ -86,7 +86,7 @@
         </div>
 
         <!-- Carga Imágenes -->
-        <div>
+        <div class="mb-4">
           <label class="block text-sm font-medium mb-2">Imágenes</label>
           <label class="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50">
             <span class="text-sm text-gray-600">🖼️ Cargar imágenes</span>
@@ -97,82 +97,108 @@
                    class="hidden">
           </label>
         </div>
-      </div>
 
-      <!-- Galería de Imágenes -->
-      <div *ngIf="subnivelActual.imagenes.length > 0" class="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 class="text-lg font-semibold mb-4">Imágenes ({{subnivelActual.imagenes.length}})</h3>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div *ngFor="let imagen of subnivelActual.imagenes; let i = index" class="relative group">
-            <img [src]="imagen.datos" 
-                 [alt]="imagen.nombre"
-                 class="w-full h-48 object-cover rounded-lg">
-            <button (click)="eliminarImagen(i)"
-                    class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-all">
-              Eliminar
-            </button>
-            <p class="text-xs text-gray-600 mt-2 truncate">{{imagen.nombre}}</p>
-          </div>
+        <!-- Botón para crear collage desde imágenes existentes -->
+        <div *ngIf="subnivelActual && subnivelActual.imagenes.length >= 2">
+          <button (click)="iniciarCreacionCollage()"
+                  class="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+            🖼️ Crear Collage de Imágenes
+          </button>
         </div>
       </div>
 
-      <!-- Tablas Excel -->
-      <div *ngIf="subnivelActual.archivosExcel.length > 0" class="space-y-6">
-        <div *ngFor="let excel of subnivelActual.archivosExcel; let ei = index" 
-             class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="text-lg font-semibold">{{excel.nombre}}</h3>
-              <p class="text-sm text-gray-500">
-                {{excel.datos.length - 1}} filas × {{excel.datos[0]?.length}} columnas
-              </p>
+      <!-- Contenido Ordenado (Tablas Excel, Imágenes y Gráficas) -->
+      <div *ngIf="obtenerContenidoOrdenado().length > 0" class="space-y-6">
+        <ng-container *ngFor="let contenido of obtenerContenidoOrdenado()">
+          
+          <!-- Tabla Excel -->
+          <div *ngIf="contenido.tipo === 'excel'" class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
+                <p class="text-sm text-gray-500">
+                  {{contenido.item.datos.length - 1}} filas × {{contenido.item.datos[0]?.length}} columnas
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <button (click)="abrirModalGrafica(contenido.index)"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  📊 Generar Gráfica
+                </button>
+                <button (click)="eliminarExcel(contenido.index)"
+                        class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                  Eliminar
+                </button>
+              </div>
             </div>
-            <div class="flex gap-2">
-              <button (click)="abrirModalGrafica(ei)"
-                      class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                📊 Generar Gráfica
-              </button>
-              <button (click)="eliminarExcel(ei)"
-                      class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th *ngFor="let header of contenido.item.datos[0]"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      {{header}}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr *ngFor="let fila of contenido.item.datos.slice(1)">
+                    <td *ngFor="let celda of fila"
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{celda}}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Imagen -->
+          <div *ngIf="contenido.tipo === 'imagen'" class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">{{contenido.item.tituloPersonalizado || contenido.item.nombre || 'Imagen'}}</h3>
+            <div class="relative group">
+              <img [src]="contenido.item.datos" 
+                   [alt]="contenido.item.tituloPersonalizado || contenido.item.nombre"
+                   class="w-full max-w-2xl mx-auto h-auto object-contain rounded-lg">
+              <button (click)="eliminarImagen(contenido.index)"
+                      class="absolute top-2 right-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-all">
                 Eliminar
               </button>
             </div>
+            <p class="text-sm text-gray-600 mt-2" *ngIf="contenido.item.tituloPersonalizado !== contenido.item.nombre">
+              {{contenido.item.nombre}}
+            </p>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th *ngFor="let header of excel.datos[0]"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    {{header}}
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr *ngFor="let fila of excel.datos.slice(1)">
-                  <td *ngFor="let celda of fila"
-                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{celda}}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Collage -->
+          <div *ngIf="contenido.tipo === 'collage'" class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold">{{contenido.item.titulo}}</h3>
+              <button (click)="eliminarCollage(contenido.index)"
+                      class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                Eliminar Collage
+              </button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div *ngFor="let imagen of contenido.item.imagenes; let i = index" class="relative">
+                <img [src]="imagen.datos" 
+                     [alt]="imagen.nombre"
+                     class="w-full h-48 object-cover rounded-lg">
+                <p class="text-xs text-gray-600 mt-2 truncate">{{imagen.nombre}}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Gráficas -->
-      <div *ngIf="subnivelActual.graficas && subnivelActual.graficas.length > 0" 
-           class="space-y-6 mt-6">
-        <h3 class="text-xl font-bold text-gray-800 mb-4">
-          Gráficas Generadas ({{subnivelActual.graficas.length}})
-        </h3>
-        <app-grafica-viewer *ngFor="let grafica of subnivelActual.graficas; let i = index"
-                            [grafica]="grafica"
-                            [index]="i"
-                            (onEliminar)="eliminarGrafica($event)">
-        </app-grafica-viewer>
+          <!-- Gráfica -->
+          <div *ngIf="contenido.tipo === 'grafica'" class="bg-white rounded-lg shadow p-6">
+            <app-grafica-viewer [grafica]="contenido.item"
+                                [index]="contenido.index"
+                                (onEliminar)="eliminarGrafica($event)">
+            </app-grafica-viewer>
+          </div>
+
+        </ng-container>
       </div>
     </div>
 

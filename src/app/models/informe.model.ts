@@ -14,6 +14,7 @@ export interface Grafica {
   columnas: string[];
   excelIndex: number;
   nombreExcel: string;
+  tituloPersonalizado?: string; // Nombre personalizado para mostrar
 }
 
 export interface SubNivel {

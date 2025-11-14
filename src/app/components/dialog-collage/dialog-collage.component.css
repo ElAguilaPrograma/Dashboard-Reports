@@ -1,0 +1,44 @@
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-content {
+  min-width: 500px;
+  max-width: 800px;
+  padding: 20px 0;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.max-h-96 {
+  max-height: 24rem;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.selected {
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.3);
+}
+

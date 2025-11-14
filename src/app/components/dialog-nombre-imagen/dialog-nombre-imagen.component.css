@@ -1,0 +1,13 @@
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-content {
+  min-width: 300px;
+  padding: 20px 0;
+}
+
+.mt-3 {
+  margin-top: 16px;
+}
+
