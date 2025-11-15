@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { ChartConfiguration } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
 import { Grafica } from '../../models/informe.model';
 
 @Component({
@@ -8,10 +9,12 @@ import { Grafica } from '../../models/informe.model';
   templateUrl: './grafica-viewer.component.html',
   styleUrl: './grafica-viewer.component.css',
 })
-export class GraficaViewerComponent implements OnInit {
+export class GraficaViewerComponent implements OnInit, AfterViewInit {
   @Input() grafica!: Grafica;
   @Input() index!: number;
   @Output() onEliminar = new EventEmitter<number>();
+  @Output() onExpandir = new EventEmitter<{grafica: Grafica, index: number}>();
+  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   public chartData!: ChartConfiguration['data'];
   public chartOptions: ChartConfiguration['options'];
@@ -41,6 +44,22 @@ export class GraficaViewerComponent implements OnInit {
     this.configurarOpciones();
   }
 
+  ngAfterViewInit() {
+    // Asegurar que el chart esté disponible después de la inicialización de la vista
+    setTimeout(() => {
+      console.log('Chart después de AfterViewInit:', this.chart);
+      console.log('Canvas disponible:', this.chart?.chart?.canvas);
+      
+      // Verificar que el canvas esté realmente renderizado
+      if (this.chart?.chart?.canvas) {
+        console.log('Canvas dimensions:', {
+          width: this.chart.chart.canvas.width,
+          height: this.chart.chart.canvas.height
+        });
+      }
+    }, 500);
+  }
+
   // Métodos auxiliares para el template
   getChartIcon(): string {
     switch (this.grafica.tipo) {
@@ -67,14 +86,126 @@ export class GraficaViewerComponent implements OnInit {
   }
 
   exportChart(): void {
-    // Implementar exportación de gráfica
-    console.log('Exportando gráfica...');
+    console.log('Iniciando exportación de gráfica...');
+    this.isLoading = true;
+    
+    // Método más robusto para obtener el canvas
+    this.getChartCanvas().then(canvas => {
+      this.isLoading = false;
+      if (canvas) {
+        try {
+          // Crear un enlace para descargar
+          const link = document.createElement('a');
+          const fileName = `${this.grafica.tituloPersonalizado || this.grafica.nombreExcel || 'grafica'}.png`;
+          link.download = fileName;
+          
+          // Crear la imagen con mejor calidad
+          link.href = canvas.toDataURL('image/png', 1.0);
+          
+          // Agregar el enlace al DOM, hacer clic y removerlo
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          console.log('Gráfica exportada exitosamente como:', fileName);
+          
+          // Mostrar mensaje de éxito al usuario
+          const mensaje = `Gráfica descargada como ${fileName}`;
+          this.mostrarMensajeExito(mensaje);
+          
+        } catch (error) {
+          console.error('Error al exportar la gráfica:', error);
+          alert('Error al exportar la gráfica. Por favor, inténtelo de nuevo.');
+        }
+      } else {
+        console.error('No se pudo acceder al canvas de la gráfica');
+        alert('La gráfica aún no está lista para exportar. Por favor, espere un momento e inténtelo de nuevo.');
+      }
+    }).catch(error => {
+      this.isLoading = false;
+      console.error('Error al obtener el canvas:', error);
+      alert('Error al acceder a la gráfica. Por favor, inténtelo de nuevo.');
+    });
+  }
+
+  private async getChartCanvas(): Promise<HTMLCanvasElement | null> {
+    // Intentar múltiples métodos con reintentos
+    for (let attempt = 0; attempt < 5; attempt++) {
+      console.log(`Intento ${attempt + 1} de obtener canvas...`);
+      
+      // Método 1: A través de ViewChild
+      if (this.chart && this.chart.chart && this.chart.chart.canvas) {
+        console.log('Canvas obtenido vía ViewChild');
+        return this.chart.chart.canvas;
+      }
+      
+      // Método 2: Buscar directamente en el DOM
+      const canvasElement = document.querySelector('.chart-canvas') as HTMLCanvasElement;
+      if (canvasElement && canvasElement.tagName === 'CANVAS') {
+        console.log('Canvas obtenido vía querySelector');
+        return canvasElement;
+      }
+      
+      // Método 3: Buscar por el elemento base-chart
+      const baseChartElement = document.querySelector('canvas[baseChart]') as HTMLCanvasElement;
+      if (baseChartElement && baseChartElement.tagName === 'CANVAS') {
+        console.log('Canvas obtenido vía baseChart selector');
+        return baseChartElement;
+      }
+      
+      // Esperar antes del siguiente intento
+      if (attempt < 4) {
+        await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)));
+      }
+    }
+    
+    return null;
+  }
+  
+  private mostrarMensajeExito(mensaje: string): void {
+    // Crear un elemento temporal para mostrar el mensaje
+    const toast = document.createElement('div');
+    toast.textContent = mensaje;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 10000;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Animar entrada
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
+    }, 3000);
   }
 
   toggleFullscreen(): void {
-    this.isFullscreen = !this.isFullscreen;
-    // Implementar lógica de pantalla completa
-    console.log('Toggle fullscreen:', this.isFullscreen);
+    // Emitir evento para que el componente padre maneje la expansión
+    this.onExpandir.emit({ grafica: this.grafica, index: this.index });
   }
 
   private prepararDatos() {

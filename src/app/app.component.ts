@@ -54,6 +54,13 @@ export class AppComponent implements OnInit {
     });
   }
 
+  onPlantaActivaChange(plantaIndex: number) {
+    this.plantaActiva = plantaIndex;
+    // Reset subnivel selection when changing plant
+    this.subnivelSeleccionado = null;
+    this.actualizarSubnivelActual();
+  }
+
   toggleNivel(nivelIndex: number) {
     this.reportService.toggleNivel(this.plantaActiva, nivelIndex);
   }
@@ -774,6 +781,11 @@ export class AppComponent implements OnInit {
   ordenAscendente = true;
   datosOrdenados: any[] = [];
 
+  // Modal de gráfica expandida
+  mostrarModalGraficaExpandida = false;
+  graficaExpandida: any = null;
+  graficaExpandidaIndex = 0;
+
   expandirTabla(excelIndex: number) {
     if (!this.subnivelActual) return;
     this.tablaExpandida = this.subnivelActual.archivosExcel[excelIndex];
@@ -787,6 +799,29 @@ export class AppComponent implements OnInit {
     this.mostrarModalTabla = false;
     this.tablaExpandida = null;
     this.datosOrdenados = [];
+  }
+
+  // Métodos para gráfica expandida
+  expandirGrafica(event: {grafica: any, index: number}) {
+    if (!this.subnivelActual) return;
+    this.graficaExpandida = event.grafica;
+    this.graficaExpandidaIndex = event.index;
+    this.mostrarModalGraficaExpandida = true;
+  }
+
+  cerrarModalGraficaExpandida() {
+    this.mostrarModalGraficaExpandida = false;
+    this.graficaExpandida = null;
+  }
+
+  getChartTypeName(tipo: string): string {
+    switch (tipo) {
+      case 'bar': return 'Gráfica de Barras';
+      case 'line': return 'Gráfica de Líneas';
+      case 'pie': return 'Gráfica Circular';
+      case 'radar': return 'Gráfica de Radar';
+      default: return 'Gráfica';
+    }
   }
 
   ordenarColumna(columnIndex: number) {

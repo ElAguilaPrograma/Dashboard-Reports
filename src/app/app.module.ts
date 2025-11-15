@@ -27,6 +27,7 @@ import { DialogCollageComponent } from './components/dialog-collage/dialog-colla
 import { HeaderComponent } from './components/header/header.component';
 import { DialogEditarTituloComponent } from './components/dialog-editar-titulo/dialog-editar-titulo.component';
 import { DialogAgregarContenidoComponent } from './components/dialog-agregar-contenido/dialog-agregar-contenido.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,8 @@ import { DialogAgregarContenidoComponent } from './components/dialog-agregar-con
     DialogCollageComponent,
     HeaderComponent,
     DialogEditarTituloComponent,
-    DialogAgregarContenidoComponent
+    DialogAgregarContenidoComponent,
+    SidebarComponent
   ],
   imports: [
     BrowserModule,

@@ -2,94 +2,18 @@
   <app-header></app-header>
   <div class="flex bg-gray-100 main-content">
   <!-- Sidebar -->
-  <div [class.sidebar-expanded]="(sidebarVisible$ | async)" 
-       [class.sidebar-collapsed]="!(sidebarVisible$ | async)"
-       class="modern-sidebar sidebar-animated">
-    <!-- Tabs Plantas -->
-    <div class="plants-tabs">
-      <div class="tabs-header">
-        <mat-icon class="tabs-icon">eco</mat-icon>
-        <span class="tabs-title">Plantas</span>
-      </div>
-      <div class="tabs-container">
-        <button type="button" *ngFor="let planta of plantas; let i = index"
-                (click)="plantaActiva = i"
-                [class.active]="plantaActiva === i"
-                class="plant-tab">
-          <mat-icon class="plant-icon">local_florist</mat-icon>
-          <span class="plant-name">{{planta.nombre}}</span>
-          <div class="tab-indicator" *ngIf="plantaActiva === i"></div>
-        </button>
-      </div>
-    </div>
-
-    <!-- Navegación por Niveles -->
-    <div class="navigation-section">
-      <div class="section-header">
-        <mat-icon class="section-icon">account_tree</mat-icon>
-        <span class="section-title">Navegación</span>
-      </div>
-      
-      <div class="levels-container">
-        <div *ngFor="let nivel of plantas[plantaActiva]?.niveles; let ni = index" 
-             class="level-group">
-          <button type="button" 
-                  (click)="toggleNivel(ni)"
-                  class="level-header"
-                  [class.expanded]="!nivel.collapsed">
-            <div class="level-info">
-              <mat-icon class="level-icon">{{nivel.collapsed ? 'expand_more' : 'expand_less'}}</mat-icon>
-              <span class="level-title">{{nivel.titulo}}</span>
-            </div>
-            <div class="level-stats">
-              <span class="stats-count">{{nivel.subniveles.length}}</span>
-            </div>
-          </button>
-
-          <div *ngIf="!nivel.collapsed" class="sublevels-container">
-            <button type="button" 
-                    *ngFor="let subnivel of nivel.subniveles; let si = index"
-                    (click)="seleccionarSubnivel(ni, si)"
-                    [class.active]="subnivelSeleccionado?.nivelIndex === ni && subnivelSeleccionado?.subnivelIndex === si"
-                    class="sublevel-item">
-              <div class="sublevel-main">
-                <mat-icon class="sublevel-icon">description</mat-icon>
-                <div class="sublevel-info">
-                  <span class="sublevel-name">{{subnivel.titulo || 'Subnivel ' + subnivel.id}}</span>
-                  <div class="sublevel-badges">
-                    <span *ngIf="subnivel.archivosExcel.length > 0" 
-                          class="badge excel-badge"
-                          matTooltip="{{subnivel.archivosExcel.length}} archivos Excel">
-                      <mat-icon class="badge-icon">table_chart</mat-icon>
-                      {{subnivel.archivosExcel.length}}
-                    </span>
-                    <span *ngIf="subnivel.imagenes.length > 0" 
-                          class="badge image-badge"
-                          matTooltip="{{subnivel.imagenes.length}} imágenes">
-                      <mat-icon class="badge-icon">image</mat-icon>
-                      {{subnivel.imagenes.length}}
-                    </span>
-                    <span *ngIf="subnivel.graficas && subnivel.graficas.length > 0" 
-                          class="badge chart-badge"
-                          matTooltip="{{subnivel.graficas.length}} gráficas">
-                      <mat-icon class="badge-icon">bar_chart</mat-icon>
-                      {{subnivel.graficas.length}}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <mat-icon class="chevron-icon">chevron_right</mat-icon>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Footer del Sidebar -->
-  </div>
+  <app-sidebar 
+    [plantas]="plantas"
+    [plantaActiva]="plantaActiva"
+    [subnivelSeleccionado]="subnivelSeleccionado"
+    (plantaActivaChange)="plantaActiva = $event"
+    (toggleNivelEvent)="toggleNivel($event)"
+    (seleccionarSubnivelEvent)="seleccionarSubnivel($event.nivelIndex, $event.subnivelIndex)">
+  </app-sidebar>
 
   <!-- Área contenido - Dashboard Grid -->
-  <div class="flex-1 overflow-y-auto p-6 content-area">
+  <div class="flex-1 overflow-y-auto p-6 content-area" 
+       [class.sidebar-collapsed]="!(sidebarVisible$ | async)">
     <div *ngIf="subnivelActual" class="w-full">
       <!-- Título del Subnivel -->
       <h2 class="text-3xl font-bold mb-6 text-gray-800">
@@ -141,7 +65,9 @@
                [class.masonry-item-large]="esTablaGrande(contenido.item)"
                [class.masonry-item-small]="!esTablaGrande(contenido.item)"
                class="masonry-item">
-            <div class="card card-table" [class.is-small-table]="!esTablaGrande(contenido.item)">
+            <div class="card card-table" 
+                 [class.is-small-table]="!esTablaGrande(contenido.item)"
+                 [attr.data-columns]="contenido.item.datos[0]?.length">
               <div class="card-header table-header">
                 <div class="table-info">
                   <h3 class="table-title">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
@@ -329,11 +255,7 @@
                            [alt]="imagen.nombre"
                            class="collage-image">
                       <div class="collage-overlay">
-                        <mat-icon class="zoom-icon">zoom_in</mat-icon>
-                        <div class="image-title-overlay">
-                          <mat-icon class="expand-icon">open_in_full</mat-icon>
-                          {{imagen.nombre}}
-                        </div>
+                        <mat-icon class="collage-zoom-icon">zoom_in</mat-icon>
                       </div>
                     </div>
                   </div>
@@ -350,7 +272,8 @@
             <div class="card-chart-wrapper">
               <app-grafica-viewer [grafica]="contenido.item"
                                   [index]="contenido.index"
-                                  (onEliminar)="eliminarGrafica($event)">
+                                  (onEliminar)="eliminarGrafica($event)"
+                                  (onExpandir)="expandirGrafica($event)">
               </app-grafica-viewer>
             </div>
           </div>
@@ -417,7 +340,6 @@
   </div>
 </div>
 
-<!-- Modal de Gráfica -->
 <!-- Modal de Gráfica -->
 <app-modal-grafica *ngIf="mostrarModalGrafica && subnivelActual"
                    [excel]="subnivelActual.archivosExcel[excelIndexSeleccionado]"
@@ -519,6 +441,48 @@
           <span class="stat-label">Celdas:</span>
           <span class="stat-value">{{(tablaExpandida?.datos.length - 1) * tablaExpandida?.datos[0]?.length}}</span>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Gráfica Expandida -->
+<div *ngIf="mostrarModalGraficaExpandida" 
+     class="chart-modal-backdrop" 
+     (click)="cerrarModalGraficaExpandida()">
+  <div class="chart-modal-container" 
+       (click)="$event.stopPropagation()">
+    <!-- Header del Modal -->
+    <div class="chart-modal-header">
+      <div class="modal-title-section">
+        <mat-icon class="modal-icon">analytics</mat-icon>
+        <div class="title-info">
+          <h2 class="modal-title">{{graficaExpandida?.tituloPersonalizado || ('Gráfica de ' + graficaExpandida?.nombreExcel)}}</h2>
+          <span class="modal-subtitle">
+            {{graficaExpandida?.datos?.length || 0}} datos • 
+            {{graficaExpandida?.columnas?.length || 0}} series • 
+            {{getChartTypeName(graficaExpandida?.tipo)}}
+          </span>
+        </div>
+      </div>
+      <div class="modal-header-actions">
+        <button type="button" 
+                class="modal-action-btn close-btn"
+                matTooltip="Cerrar"
+                (click)="cerrarModalGraficaExpandida()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Contenido del Modal -->
+    <div class="chart-modal-content">
+      <div class="chart-expanded-wrapper">
+        <app-grafica-viewer *ngIf="graficaExpandida"
+                            [grafica]="graficaExpandida"
+                            [index]="graficaExpandidaIndex"
+                            (onEliminar)="eliminarGrafica($event); cerrarModalGraficaExpandida()">
+        </app-grafica-viewer>
       </div>
     </div>
   </div>

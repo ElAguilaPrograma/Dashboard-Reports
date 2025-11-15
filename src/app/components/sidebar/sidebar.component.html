@@ -1,0 +1,86 @@
+<!-- Sidebar -->
+<div [class.sidebar-expanded]="(sidebarVisible$ | async)" 
+     [class.sidebar-collapsed]="!(sidebarVisible$ | async)"
+     class="modern-sidebar sidebar-animated">
+  <!-- Tabs Plantas -->
+  <div class="plants-tabs">
+    <div class="tabs-header">
+      <mat-icon class="tabs-icon">eco</mat-icon>
+      <span class="tabs-title">Plantas</span>
+    </div>
+    <div class="tabs-container">
+      <button type="button" *ngFor="let planta of plantas; let i = index"
+              (click)="onPlantaClick(i)"
+              [class.active]="plantaActiva === i"
+              class="plant-tab">
+        <mat-icon class="plant-icon">local_florist</mat-icon>
+        <span class="plant-name">{{planta.nombre}}</span>
+        <div class="tab-indicator" *ngIf="plantaActiva === i"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Navegación por Niveles -->
+  <div class="navigation-section">
+    <div class="section-header">
+      <mat-icon class="section-icon">account_tree</mat-icon>
+      <span class="section-title">Navegación</span>
+    </div>
+    
+    <div class="levels-container">
+      <div *ngFor="let nivel of plantas[plantaActiva]?.niveles; let ni = index" 
+           class="level-group">
+        <button type="button" 
+                (click)="onToggleNivel(ni)"
+                class="level-header"
+                [class.expanded]="!nivel.collapsed">
+          <div class="level-info">
+            <mat-icon class="level-icon">{{nivel.collapsed ? 'expand_more' : 'expand_less'}}</mat-icon>
+            <span class="level-title">{{nivel.titulo}}</span>
+          </div>
+          <div class="level-stats">
+            <span class="stats-count">{{nivel.subniveles.length}}</span>
+          </div>
+        </button>
+
+        <div *ngIf="!nivel.collapsed" class="sublevels-container">
+          <button type="button" 
+                  *ngFor="let subnivel of nivel.subniveles; let si = index"
+                  (click)="onSeleccionarSubnivel(ni, si)"
+                  [class.active]="subnivelSeleccionado?.nivelIndex === ni && subnivelSeleccionado?.subnivelIndex === si"
+                  class="sublevel-item">
+            <div class="sublevel-main">
+              <mat-icon class="sublevel-icon">description</mat-icon>
+              <div class="sublevel-info">
+                <span class="sublevel-name">{{subnivel.titulo || 'Subnivel ' + subnivel.id}}</span>
+                <div class="sublevel-badges">
+                  <span *ngIf="subnivel.archivosExcel.length > 0" 
+                        class="badge excel-badge"
+                        matTooltip="{{subnivel.archivosExcel.length}} archivos Excel">
+                    <mat-icon class="badge-icon">table_chart</mat-icon>
+                    {{subnivel.archivosExcel.length}}
+                  </span>
+                  <span *ngIf="subnivel.imagenes.length > 0" 
+                        class="badge image-badge"
+                        matTooltip="{{subnivel.imagenes.length}} imágenes">
+                    <mat-icon class="badge-icon">image</mat-icon>
+                    {{subnivel.imagenes.length}}
+                  </span>
+                  <span *ngIf="subnivel.graficas && subnivel.graficas.length > 0" 
+                        class="badge chart-badge"
+                        matTooltip="{{subnivel.graficas.length}} gráficas">
+                    <mat-icon class="badge-icon">bar_chart</mat-icon>
+                    {{subnivel.graficas.length}}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <mat-icon class="chevron-icon">chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer del Sidebar -->
+</div>

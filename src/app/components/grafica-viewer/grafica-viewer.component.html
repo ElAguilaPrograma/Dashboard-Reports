@@ -22,9 +22,10 @@
     <div class="chart-actions">
       <button type="button" 
               class="btn-chart-action btn-export"
-              matTooltip="Exportar gráfica"
+              matTooltip="Exportar gráfica como imagen PNG"
               matTooltipPosition="above"
-              (click)="exportChart()">
+              (click)="exportChart()"
+              [disabled]="isLoading">
         <mat-icon>download</mat-icon>
       </button>
       <button type="button" 
