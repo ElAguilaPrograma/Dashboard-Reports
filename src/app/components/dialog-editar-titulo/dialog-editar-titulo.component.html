@@ -1,0 +1,25 @@
+<h2 mat-dialog-title>Editar Información</h2>
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Título</mat-label>
+    <input matInput [(ngModel)]="titulo" 
+           placeholder="Ingrese el título"
+           (keyup.enter)="onConfirm()"
+           autofocus>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Descripción</mat-label>
+    <textarea matInput [(ngModel)]="descripcion" 
+              placeholder="Ingrese la descripción"
+              rows="4"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" 
+          [disabled]="!titulo.trim()"
+          (click)="onConfirm()">
+    Confirmar
+  </button>
+</mat-dialog-actions>

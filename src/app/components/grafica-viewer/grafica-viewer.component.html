@@ -1,5 +1,5 @@
-<div class="bg-white rounded-lg shadow p-6">
-  <div class="flex items-center justify-between mb-4">
+<div class="grafica-content">
+  <div class="grafica-header">
     <div>
       <h3 class="text-lg font-semibold text-gray-800">
         {{grafica.tituloPersonalizado || ('Gráfica de ' + grafica.nombreExcel)}}
@@ -14,7 +14,7 @@
     </button>
   </div>
   
-  <div style="height: 400px;">
+  <div class="grafica-container">
     <canvas baseChart
             [type]="chartType"
             [data]="chartData"

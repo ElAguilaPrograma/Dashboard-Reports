@@ -1,0 +1,48 @@
+.header {
+  height: 60px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.app-title {
+  font-weight: 600;
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.actions .btn {
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.7);
+  color: white;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+  .actions .btn:hover {
+    background-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255,255,255,0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(255,255,255,0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  }
+}

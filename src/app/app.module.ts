@@ -8,6 +8,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, registerables } from 'chart.js';
 
@@ -22,6 +24,9 @@ import { DialogNombreExcelComponent } from './components/dialog-nombre-excel/dia
 import { DialogNombreImagenComponent } from './components/dialog-nombre-imagen/dialog-nombre-imagen.component';
 import { DialogNombreGraficaComponent } from './components/dialog-nombre-grafica/dialog-nombre-grafica.component';
 import { DialogCollageComponent } from './components/dialog-collage/dialog-collage.component';
+import { HeaderComponent } from './components/header/header.component';
+import { DialogEditarTituloComponent } from './components/dialog-editar-titulo/dialog-editar-titulo.component';
+import { DialogAgregarContenidoComponent } from './components/dialog-agregar-contenido/dialog-agregar-contenido.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +36,10 @@ import { DialogCollageComponent } from './components/dialog-collage/dialog-colla
     DialogNombreExcelComponent,
     DialogNombreImagenComponent,
     DialogNombreGraficaComponent,
-    DialogCollageComponent
+    DialogCollageComponent,
+    HeaderComponent,
+    DialogEditarTituloComponent,
+    DialogAgregarContenidoComponent
   ],
   imports: [
     BrowserModule,
@@ -44,7 +52,9 @@ import { DialogCollageComponent } from './components/dialog-collage/dialog-colla
     MatButtonModule,
     MatCheckboxModule,
     MatFormFieldModule,
-    BaseChartDirective
+    MatIconModule,
+    BaseChartDirective,
+    DragDropModule
   ],
   providers: [],
   bootstrap: [AppComponent]

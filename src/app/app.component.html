@@ -1,6 +1,10 @@
+<app-header></app-header>
 <div class="flex h-screen bg-gray-100">
   <!-- Sidebar -->
-  <div class="w-80 bg-white shadow-lg overflow-y-auto">
+  <div [class.w-80]="(sidebarVisible$ | async)" 
+       [class.w-0]="!(sidebarVisible$ | async)"
+       [hidden]="!(sidebarVisible$ | async)"
+       class="bg-white shadow-lg overflow-y-auto transition-all duration-300">
     <!-- Tabs Plantas -->
     <div class="flex border-b">
       <button *ngFor="let planta of plantas; let i = index"
@@ -47,157 +51,181 @@
     </div>
   </div>
 
-  <!-- Área contenido -->
-  <div class="flex-1 overflow-y-auto p-8">
-    <div *ngIf="subnivelActual" class="max-w-4xl mx-auto">
-      <h2 class="text-2xl font-bold mb-6">
-        {{plantas[plantaActiva].nombre}} - Subnivel {{subnivelActual.id}}
+  <!-- Área contenido - Dashboard Grid -->
+  <div class="flex-1 overflow-y-auto p-6 content-area">
+    <div *ngIf="subnivelActual" class="w-full">
+      <!-- Título del Subnivel -->
+      <h2 class="text-3xl font-bold mb-6 text-gray-800">
+        {{plantas[plantaActiva].nombre}} - {{subnivelActual.titulo || 'Subnivel ' + subnivelActual.id}}
       </h2>
 
-      <!-- Formulario -->
-      <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-2">Título</label>
-          <input [(ngModel)]="subnivelActual.titulo"
-                 (ngModelChange)="guardarCambios()"
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                 placeholder="Ingrese el título">
-        </div>
+      <!-- Botones de Acciones (Editar Información y Agregar Contenido) -->
+      <div class="mb-6 flex gap-4">
+        <button (click)="abrirDialogoEditarInfo()" 
+                mat-raised-button color="primary"
+                class="flex items-center gap-2">
+          <mat-icon>edit</mat-icon>
+          Editar Información
+        </button>
 
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-2">Descripción</label>
-          <textarea [(ngModel)]="subnivelActual.descripcion"
-                    (ngModelChange)="guardarCambios()"
-                    rows="4"
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ingrese la descripción"></textarea>
-        </div>
+        <button (click)="abrirDialogoAgregarContenido()" 
+                mat-raised-button color="accent"
+                class="flex items-center gap-2">
+          <mat-icon>add</mat-icon>
+          Agregar Contenido
+        </button>
 
-        <!-- Carga Excel -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-2">Archivos Excel</label>
-          <label class="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50">
-            <span class="text-sm text-gray-600">📊 Cargar archivo Excel</span>
-            <input type="file" 
-                   accept=".xlsx,.xls" 
-                   (change)="onExcelSelected($event)"
-                   class="hidden">
-          </label>
-        </div>
-
-        <!-- Carga Imágenes -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-2">Imágenes</label>
-          <label class="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50">
-            <span class="text-sm text-gray-600">🖼️ Cargar imágenes</span>
-            <input type="file" 
-                   accept="image/*" 
-                   multiple
-                   (change)="onImagenesSelected($event)"
-                   class="hidden">
-          </label>
-        </div>
-
-        <!-- Botón para crear collage desde imágenes existentes -->
-        <div *ngIf="subnivelActual && subnivelActual.imagenes.length >= 2">
-          <button (click)="iniciarCreacionCollage()"
-                  class="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
-            🖼️ Crear Collage de Imágenes
-          </button>
-        </div>
+        <!-- Botón para crear collage (solo si hay suficientes imágenes) -->
+        <button *ngIf="subnivelActual && subnivelActual.imagenes.length >= 2"
+                (click)="iniciarCreacionCollage()"
+                mat-raised-button color="warn"
+                class="flex items-center gap-2">
+          <mat-icon>collections</mat-icon>
+          Collage
+        </button>
       </div>
 
-      <!-- Contenido Ordenado (Tablas Excel, Imágenes y Gráficas) -->
-      <div *ngIf="obtenerContenidoOrdenado().length > 0" class="space-y-6">
-        <ng-container *ngFor="let contenido of obtenerContenidoOrdenado()">
+      <!-- Grid Dashboard CON DRAG-DROP -->
+      <div class="dashboard-masonry" cdkDropList [cdkDropListData]="contenidoOrdenado" (cdkDropListDropped)="drop($event)">
+        <!-- KPI Card (Pequeña) -->
+        <div *ngIf="subnivelActual.titulo" class="masonry-item masonry-item-small" cdkDrag>
+          <div class="card card-kpi">
+            <div class="drag-handle" cdkDragHandle>⋮⋮</div>
+            <h3>Información</h3>
+            <p>{{subnivelActual.titulo}}</p>
+            <p>{{ subnivelActual.descripcion }}</p>
+          </div>
+        </div>
+
+        <!-- Contenido (Tablas, Imágenes, Gráficas, Collages) -->
+        <ng-container *ngFor="let contenido of contenidoOrdenado; let i = index">
           
-          <!-- Tabla Excel -->
-          <div *ngIf="contenido.tipo === 'excel'" class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="text-lg font-semibold">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
-                <p class="text-sm text-gray-500">
-                  {{contenido.item.datos.length - 1}} filas × {{contenido.item.datos[0]?.length}} columnas
-                </p>
+          <!-- Tabla Excel (tamaño dinámico según contenido) -->
+          <div *ngIf="contenido.tipo === 'excel'" 
+               [class.masonry-item-large]="esTablaGrande(contenido.item)"
+               [class.masonry-item-small]="!esTablaGrande(contenido.item)"
+               class="masonry-item" cdkDrag>
+            <div class="card card-table" [class.is-small-table]="!esTablaGrande(contenido.item)">
+              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
+              <div class="card-header">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-800">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{contenido.item.datos.length - 1}} filas × {{contenido.item.datos[0]?.length}} columnas
+                  </p>
+                </div>
+                <div class="button-group">
+                  <button (click)="abrirModalGrafica(contenido.index)"
+                          class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm transition-colors">
+                    📊 Gráfica
+                  </button>
+                  <button (click)="actualizarArchivoExcel(contenido.index)"
+                          class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm transition-colors"
+                          title="Actualizar con nuevo archivo Excel">
+                    🔄 Actualizar
+                  </button>
+                  <button (click)="eliminarExcel(contenido.index)"
+                          class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm transition-colors">
+                    ✕
+                  </button>
+                </div>
               </div>
-              <div class="flex gap-2">
-                <button (click)="abrirModalGrafica(contenido.index)"
-                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                  📊 Generar Gráfica
+
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th *ngFor="let header of contenido.item.datos[0]">{{header}}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let fila of contenido.item.datos.slice(1)">
+                      <td *ngFor="let celda of fila">{{celda}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Imagen (ocupan 1 columna) -->
+          <div *ngIf="contenido.tipo === 'imagen'" class="masonry-item masonry-item-small" cdkDrag>
+            <div class="card card-image">
+              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
+              <div class="relative">
+                <img [src]="contenido.item.datos" 
+                     [alt]="contenido.item.tituloPersonalizado || contenido.item.nombre"
+                     class="image-display"
+                     (click)="expandirImagen(contenido.item)">
+                <button (click)="eliminarImagen(contenido.index)"
+                        class="absolute top-2 right-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors">
+                  ✕
                 </button>
-                <button (click)="eliminarExcel(contenido.index)"
-                        class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                  Eliminar
+              </div>
+              <p class="text-xs text-gray-600 mt-2 truncate">
+                {{contenido.item.tituloPersonalizado || contenido.item.nombre}}
+              </p>
+            </div>
+          </div>
+
+          <!-- Collage (ocupan 1 o 2 columnas según cantidad de imágenes) -->
+          <div *ngIf="contenido.tipo === 'collage'" 
+               [class.masonry-item-small]="contenido.item.imagenes.length < 4"
+               [class.masonry-item-large]="contenido.item.imagenes.length >= 4"
+               class="masonry-item" cdkDrag>
+            <div class="card card-collage">
+              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
+              <div class="card-header">
+                <h3 class="text-lg font-semibold text-gray-800">{{contenido.item.titulo}}</h3>
+                <button (click)="eliminarCollage(contenido.index)"
+                        class="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors">
+                  ✕
                 </button>
               </div>
-            </div>
-
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th *ngFor="let header of contenido.item.datos[0]"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      {{header}}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr *ngFor="let fila of contenido.item.datos.slice(1)">
-                    <td *ngFor="let celda of fila"
-                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {{celda}}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Imagen -->
-          <div *ngIf="contenido.tipo === 'imagen'" class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold mb-4">{{contenido.item.tituloPersonalizado || contenido.item.nombre || 'Imagen'}}</h3>
-            <div class="relative group">
-              <img [src]="contenido.item.datos" 
-                   [alt]="contenido.item.tituloPersonalizado || contenido.item.nombre"
-                   class="w-full max-w-2xl mx-auto h-auto object-contain rounded-lg">
-              <button (click)="eliminarImagen(contenido.index)"
-                      class="absolute top-2 right-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-all">
-                Eliminar
-              </button>
-            </div>
-            <p class="text-sm text-gray-600 mt-2" *ngIf="contenido.item.tituloPersonalizado !== contenido.item.nombre">
-              {{contenido.item.nombre}}
-            </p>
-          </div>
-
-          <!-- Collage -->
-          <div *ngIf="contenido.tipo === 'collage'" class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold">{{contenido.item.titulo}}</h3>
-              <button (click)="eliminarCollage(contenido.index)"
-                      class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                Eliminar Collage
-              </button>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div *ngFor="let imagen of contenido.item.imagenes; let i = index" class="relative">
-                <img [src]="imagen.datos" 
-                     [alt]="imagen.nombre"
-                     class="w-full h-48 object-cover rounded-lg">
-                <p class="text-xs text-gray-600 mt-2 truncate">{{imagen.nombre}}</p>
+              <div class="collage-grid">
+                <div *ngFor="let imagen of contenido.item.imagenes" class="collage-item">
+                  <img [src]="imagen.datos" 
+                       [alt]="imagen.nombre"
+                       class="image-display"
+                       (click)="expandirImagen(imagen)">
+                  <p class="text-xs text-gray-600 mt-1 truncate">{{imagen.nombre}}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Gráfica -->
-          <div *ngIf="contenido.tipo === 'grafica'" class="bg-white rounded-lg shadow p-6">
-            <app-grafica-viewer [grafica]="contenido.item"
-                                [index]="contenido.index"
-                                (onEliminar)="eliminarGrafica($event)">
-            </app-grafica-viewer>
+          <!-- Gráfica (1 o 2 columnas según tamaño) -->
+          <div *ngIf="contenido.tipo === 'grafica'" 
+               [class.masonry-item-large]="esGraficaGrande(contenido.item)"
+               [class.masonry-item-small]="!esGraficaGrande(contenido.item)"
+               class="masonry-item" cdkDrag>
+            <div class="card-chart-wrapper">
+              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
+              <app-grafica-viewer [grafica]="contenido.item"
+                                  [index]="contenido.index"
+                                  (onEliminar)="eliminarGrafica($event)">
+              </app-grafica-viewer>
+            </div>
           </div>
+        </ng-container>
 
+        <!-- Tarjetas de Texto -->
+        <ng-container *ngFor="let contenido of contenidoOrdenado">
+          <div *ngIf="contenido.tipo === 'texto'" class="masonry-item masonry-item-small" cdkDrag>
+            <div class="card card-text">
+              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
+              <div class="card-header">
+                <h3 class="text-lg font-semibold text-gray-800">{{contenido.item.titulo}}</h3>
+                <button (click)="eliminarTarjetaTexto(contenido.index)"
+                        class="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors">
+                  ✕
+                </button>
+              </div>
+              <div class="card-content">
+                <p class="text-gray-700 text-sm whitespace-pre-wrap">{{contenido.item.contenido}}</p>
+              </div>
+            </div>
+          </div>
         </ng-container>
       </div>
     </div>
@@ -205,9 +233,19 @@
     <!-- Mensaje cuando no hay subnivel seleccionado -->
     <div *ngIf="!subnivelActual" class="flex items-center justify-center h-full">
       <div class="text-center text-gray-500">
-        <p class="text-lg">📄 Seleccione un subnivel para comenzar</p>
+        <p class="text-2xl mb-2">📄</p>
+        <p class="text-lg font-semibold">Seleccione un subnivel para comenzar</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal Imagen Expandida -->
+<div *ngIf="imagenExpandida" class="modal-backdrop" (click)="imagenExpandida = null">
+  <div class="modal-imagen-grande" (click)="$event.stopPropagation()">
+    <button (click)="imagenExpandida = null" class="btn-cerrar-modal">✕</button>
+    <img [src]="imagenExpandida.datos" [alt]="imagenExpandida.nombre" class="imagen-grande">
+    <p class="text-center mt-2 text-gray-600">{{imagenExpandida.tituloPersonalizado || imagenExpandida.nombre}}</p>
   </div>
 </div>
 

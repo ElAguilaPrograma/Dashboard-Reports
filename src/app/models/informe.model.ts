@@ -1,6 +1,8 @@
 export interface ArchivoExcel {
   nombre: string;
   datos: any[][];
+  tituloPersonalizado?: string;
+  timestamp?: number;
 }
 
 export interface Imagen {
@@ -9,12 +11,19 @@ export interface Imagen {
 }
 
 export interface Grafica {
-  tipo: 'bar' | 'line';
+  tipo: 'bar' | 'line' | 'pie' | 'radar';
   datos: any[];
   columnas: string[];
   excelIndex: number;
   nombreExcel: string;
   tituloPersonalizado?: string; // Nombre personalizado para mostrar
+}
+
+export interface TarjetaTexto {
+  id: string;
+  titulo: string;
+  contenido: string;
+  timestamp?: number;
 }
 
 export interface SubNivel {
@@ -24,6 +33,7 @@ export interface SubNivel {
   archivosExcel: ArchivoExcel[];
   imagenes: Imagen[];
   graficas: Grafica[];
+  tarjetasTexto?: TarjetaTexto[];
 }
 
 export interface Nivel {

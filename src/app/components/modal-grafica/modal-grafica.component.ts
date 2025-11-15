@@ -12,12 +12,12 @@ export class ModalGraficaComponent {
   @Input() excelIndex: number = 0;
   @Output() onCrear = new EventEmitter<{
     excelIndex: number;
-    tipo: 'bar' | 'line';
+    tipo: 'bar' | 'line' | 'pie' | 'radar';
     columnas: number[];
   }>();
   @Output() onCerrar = new EventEmitter<void>();
 
-  tipoGrafica: 'bar' | 'line' = 'bar';
+  tipoGrafica: 'bar' | 'line' | 'pie' | 'radar' = 'bar';
   columnasSeleccionadas: number[] = [0, 1];
 
   get headers(): string[] {
@@ -38,6 +38,8 @@ export class ModalGraficaComponent {
   }
 
   crearGrafica() {
+    // Para gráficas de pastel y radar, solo necesitamos 2 columnas (etiqueta + datos)
+    // Para bar y line, necesitamos al menos 2 columnas
     if (this.columnasSeleccionadas.length < 2) {
       alert('Debe seleccionar al menos 2 columnas');
       return;
@@ -53,3 +55,4 @@ export class ModalGraficaComponent {
     this.onCerrar.emit();
   }
 }
+

@@ -1,12 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { Observable } from 'rxjs';
 import { ReportStateService } from './services/report-state.service';
 import { ExcelService } from './services/excel.service';
+import { SidebarService } from './services/sidebar.service';
 import { Planta, SubNivel } from './models/informe.model';
 import { DialogNombreExcelComponent, DialogNombreExcelData } from './components/dialog-nombre-excel/dialog-nombre-excel.component';
 import { DialogNombreImagenComponent, DialogNombreImagenData } from './components/dialog-nombre-imagen/dialog-nombre-imagen.component';
 import { DialogNombreGraficaComponent, DialogNombreGraficaData } from './components/dialog-nombre-grafica/dialog-nombre-grafica.component';
 import { DialogCollageComponent, DialogCollageData } from './components/dialog-collage/dialog-collage.component';
+import { DialogEditarTituloComponent, DialogEditarTituloData } from './components/dialog-editar-titulo/dialog-editar-titulo.component';
+import { DialogAgregarContenidoComponent, DialogAgregarContenidoData } from './components/dialog-agregar-contenido/dialog-agregar-contenido.component';
 
 @Component({
   selector: 'app-root',
@@ -22,6 +27,12 @@ export class AppComponent implements OnInit {
 
   mostrarModalGrafica = false;
   excelIndexSeleccionado = 0;
+  
+  sidebarVisible$: Observable<boolean>;
+  imagenExpandida: any = null;
+
+  // Arreglo cacheado para CDK y para mantener orden persistente
+  contenidoOrdenado: Array<{ tipo: 'excel' | 'imagen' | 'grafica' | 'collage' | 'texto'; item: any; index: number }> = [];
 
   // Datos temporales para modales
   archivoExcelTemporal: any = null;
@@ -31,8 +42,11 @@ export class AppComponent implements OnInit {
   constructor(
     private reportService: ReportStateService,
     private excelService: ExcelService,
+    private sidebarService: SidebarService,
     private dialog: MatDialog
-  ) {}
+  ) {
+    this.sidebarVisible$ = this.sidebarService.sidebarVisible$;
+  }
 
   ngOnInit() {
     this.reportService.plantas$.subscribe(plantas => {
@@ -55,114 +69,8 @@ export class AppComponent implements OnInit {
       this.subnivelActual = this.plantas[this.plantaActiva]
         .niveles[this.subnivelSeleccionado.nivelIndex]
         .subniveles[this.subnivelSeleccionado.subnivelIndex];
+      this.refreshContenidoOrdenado();
     }
-  }
-
-  async onExcelSelected(event: any) {
-    const file = event.target.files[0];
-    if (file && this.subnivelActual) {
-      try {
-        const excel = await this.excelService.leerExcel(file);
-        this.archivoExcelTemporal = excel;
-        
-        const dialogRef = this.dialog.open(DialogNombreExcelComponent, {
-          width: '400px',
-          data: {
-            nombreSugerido: file.name.replace(/\.[^/.]+$/, '')
-          } as DialogNombreExcelData
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-          if (result && this.archivoExcelTemporal && this.subnivelActual) {
-            // Agregar timestamp y nombre personalizado
-            (this.archivoExcelTemporal as any).timestamp = Date.now();
-            (this.archivoExcelTemporal as any).tituloPersonalizado = result;
-            this.subnivelActual.archivosExcel.push(this.archivoExcelTemporal);
-            this.guardarCambios();
-            this.archivoExcelTemporal = null;
-          } else {
-            this.archivoExcelTemporal = null;
-          }
-        });
-      } catch (error) {
-        alert('Error al cargar Excel: ' + error);
-      }
-    }
-    event.target.value = '';
-  }
-
-  async onImagenesSelected(event: any) {
-    const files = Array.from(event.target.files) as File[];
-    if (this.subnivelActual && files.length > 0) {
-      try {
-        // Cargar todas las imágenes primero
-        this.archivosImagenesTemporales = [];
-        const timestampBase = Date.now();
-        
-        for (let i = 0; i < files.length; i++) {
-          const datos = await this.excelService.leerImagen(files[i]);
-          const imagen: any = { 
-            nombre: files[i].name, 
-            datos,
-            timestamp: timestampBase + i,
-            fileIndex: i
-          };
-          this.archivosImagenesTemporales.push(imagen);
-        }
-        
-        const nombreSugerido = files.length === 1 
-          ? files[0].name.replace(/\.[^/.]+$/, '')
-          : 'Galería de imágenes';
-        
-        const dialogRef = this.dialog.open(DialogNombreImagenComponent, {
-          width: '400px',
-          data: {
-            nombreSugerido: nombreSugerido,
-            cantidadImagenes: files.length
-          } as DialogNombreImagenData
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-          if (result && this.subnivelActual && this.archivosImagenesTemporales.length > 0) {
-            if (result.crearCollage && this.archivosImagenesTemporales.length > 1) {
-              // Crear collage
-              const collage: any = {
-                tipo: 'collage',
-                titulo: result.nombre,
-                imagenes: this.archivosImagenesTemporales.map(img => ({
-                  nombre: img.nombre,
-                  datos: img.datos
-                })),
-                timestamp: Date.now()
-              };
-              
-              if (!(this.subnivelActual as any).collages) {
-                (this.subnivelActual as any).collages = [];
-              }
-              (this.subnivelActual as any).collages.push(collage);
-            } else {
-              // Insertar imágenes individualmente
-              this.archivosImagenesTemporales.forEach((imagen, index) => {
-                const nombreFinal = this.archivosImagenesTemporales.length === 1 
-                  ? result.nombre
-                  : `${result.nombre} ${index + 1}`;
-                (imagen as any).tituloPersonalizado = nombreFinal;
-                this.subnivelActual!.imagenes.push(imagen);
-              });
-            }
-            
-            this.guardarCambios();
-            this.archivosImagenesTemporales = [];
-          } else {
-            this.archivosImagenesTemporales = [];
-          }
-        });
-      } catch (error) {
-        console.error('Error al cargar imagen:', error);
-        alert('Error al cargar imágenes');
-      }
-    }
-    event.target.value = '';
   }
 
   eliminarImagen(index: number) {
@@ -187,6 +95,8 @@ export class AppComponent implements OnInit {
         this.subnivelSeleccionado.subnivelIndex,
         this.subnivelActual
       );
+      // Recalcular cache para que el template y CDK trabajen sobre la referencia correcta
+      this.refreshContenidoOrdenado();
     }
   }
 
@@ -199,7 +109,7 @@ export class AppComponent implements OnInit {
     this.mostrarModalGrafica = false;
   }
 
-  crearGrafica(config: { excelIndex: number; tipo: 'bar' | 'line'; columnas: number[] }) {
+  crearGrafica(config: { excelIndex: number; tipo: 'bar' | 'line' | 'pie' | 'radar'; columnas: number[] }) {
     if (!this.subnivelActual) return;
 
     const excel = this.subnivelActual.archivosExcel[config.excelIndex];
@@ -363,10 +273,10 @@ export class AppComponent implements OnInit {
   }
 
   // Obtener todos los elementos del contenido ordenados por timestamp de inserción
-  obtenerContenidoOrdenado(): Array<{ tipo: 'excel' | 'imagen' | 'grafica' | 'collage'; item: any; index: number }> {
+  obtenerContenidoOrdenado(): Array<{ tipo: 'excel' | 'imagen' | 'grafica' | 'collage' | 'texto'; item: any; index: number }> {
     if (!this.subnivelActual) return [];
 
-    const items: Array<{ tipo: 'excel' | 'imagen' | 'grafica' | 'collage'; item: any; index: number }> = [];
+    const items: Array<{ tipo: 'excel' | 'imagen' | 'grafica' | 'collage' | 'texto'; item: any; index: number }> = [];
 
     // Agregar archivos Excel con su índice original
     this.subnivelActual.archivosExcel.forEach((excel, index) => {
@@ -408,6 +318,17 @@ export class AppComponent implements OnInit {
       });
     }
 
+    // Agregar tarjetas de texto
+    if (this.subnivelActual.tarjetasTexto) {
+      this.subnivelActual.tarjetasTexto.forEach((tarjeta, index) => {
+        items.push({
+          tipo: 'texto',
+          item: tarjeta,
+          index: index
+        });
+      });
+    }
+
     // Ordenar por timestamp (si no existe timestamp, usar 0 para que aparezcan al inicio)
     items.sort((a, b) => {
       const timestampA = (a.item as any).timestamp || 0;
@@ -416,5 +337,368 @@ export class AppComponent implements OnInit {
     });
 
     return items;
+  }
+
+  // Métodos para el layout dashboard
+  esGraficaGrande(grafica: any): boolean {
+    // Las gráficas de pastel siempre son pequeñas
+    if (grafica.tipo === 'pie') {
+      return false;
+    }
+    // Las gráficas de radar siempre son grandes
+    if (grafica.tipo === 'radar') {
+      return true;
+    }
+    // Las gráficas con más de 10 puntos de datos se consideran grandes (2 columnas)
+    // Las demás ocupan 1 columna
+    return grafica.datos && grafica.datos.length > 10;
+  }
+
+  // Determinar si una tabla Excel es "grande" según su tamaño
+  esTablaGrande(excel: any): boolean {
+    if (!excel || !excel.datos || excel.datos.length === 0) {
+      return false;
+    }
+    
+    // Obtener cantidad de filas y columnas
+    const numFilas = excel.datos.length - 1; // Excluir header
+    const numColumnas = excel.datos[0]?.length || 0;
+    
+    // Considerar tabla grande si:
+    // - Tiene más de 5 columnas O
+    // - Tiene más de 15 filas (muchos datos)
+    return numColumnas > 5 || numFilas > 15;
+  }
+
+  expandirImagen(imagen: any): void {
+    this.imagenExpandida = imagen;
+  }
+
+  abrirDialogoEditarInfo(): void {
+    if (!this.subnivelActual) {
+      alert('Por favor selecciona un nivel primero');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DialogEditarTituloComponent, {
+      width: '500px',
+      data: {
+        titulo: this.subnivelActual.titulo || '',
+        descripcion: this.subnivelActual.descripcion || ''
+      } as DialogEditarTituloData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && this.subnivelActual) {
+        this.subnivelActual.titulo = result.titulo;
+        this.subnivelActual.descripcion = result.descripcion;
+        this.guardarCambios();
+      }
+    });
+  }
+
+  abrirDialogoAgregarContenido(): void {
+    if (!this.subnivelActual) {
+      alert('Por favor selecciona un nivel primero');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DialogAgregarContenidoComponent, {
+      width: '500px',
+      data: {} as DialogAgregarContenidoData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result || !this.subnivelActual) return;
+
+      switch (result.tipo) {
+        case 'excel':
+          this.procesarExcelDelDialog(result.archivo);
+          break;
+        case 'imagenes':
+          this.procesarImagenesDelDialog(result.archivos);
+          break;
+        case 'collage':
+          this.iniciarCreacionCollage();
+          break;
+        case 'texto':
+          this.agregarTarjetaTexto(result.titulo, result.contenido);
+          break;
+      }
+    });
+  }
+
+  private procesarExcelDelDialog(file: File): void {
+    if (!this.subnivelActual) return;
+
+    this.excelService.leerExcel(file).then(excel => {
+      this.archivoExcelTemporal = excel;
+
+      const dialogRef = this.dialog.open(DialogNombreExcelComponent, {
+        width: '400px',
+        data: {
+          nombreSugerido: file.name.replace(/\.[^/.]+$/, '')
+        } as DialogNombreExcelData
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result && this.archivoExcelTemporal && this.subnivelActual) {
+          (this.archivoExcelTemporal as any).timestamp = Date.now();
+          (this.archivoExcelTemporal as any).tituloPersonalizado = result;
+          this.subnivelActual.archivosExcel.push(this.archivoExcelTemporal);
+          this.guardarCambios();
+          this.archivoExcelTemporal = null;
+        }
+      });
+    }).catch(error => {
+      alert('Error al cargar Excel: ' + error);
+    });
+  }
+
+  private procesarImagenesDelDialog(files: File[]): void {
+    if (!this.subnivelActual) return;
+
+    const lectores = Array.from(files).map(file => {
+      return new Promise<{ nombre: string; datos: string }>((resolve, reject) => {
+        const lector = new FileReader();
+        lector.onload = (e) => {
+          resolve({
+            nombre: file.name,
+            datos: e.target?.result as string
+          });
+        };
+        lector.onerror = reject;
+        lector.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(lectores).then(imagenes => {
+      if (!this.subnivelActual) return;
+
+      // Si hay múltiples imágenes, preguntar por el nombre personalizado
+      if (imagenes.length === 1) {
+        const dialogRef = this.dialog.open(DialogNombreImagenComponent, {
+          width: '400px',
+          data: {
+            nombreSugerido: imagenes[0].nombre.replace(/\.[^/.]+$/, '')
+          } as DialogNombreImagenData
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (result && this.subnivelActual) {
+            imagenes[0].nombre = result;
+            (imagenes[0] as any).timestamp = Date.now();
+            (imagenes[0] as any).tituloPersonalizado = result;
+            this.subnivelActual.imagenes.push(imagenes[0]);
+            this.guardarCambios();
+          }
+        });
+      } else {
+        // Para múltiples imágenes, agregarlas sin pedir nombre
+        imagenes.forEach(img => {
+          (img as any).timestamp = Date.now();
+          (img as any).tituloPersonalizado = img.nombre.replace(/\.[^/.]+$/, '');
+          this.subnivelActual!.imagenes.push(img);
+        });
+        this.guardarCambios();
+      }
+    });
+  }
+
+  private agregarTarjetaTexto(titulo: string, contenido: string): void {
+    if (!this.subnivelActual) return;
+
+    if (!this.subnivelActual.tarjetasTexto) {
+      this.subnivelActual.tarjetasTexto = [];
+    }
+
+    const tarjeta = {
+      id: `texto_${Date.now()}`,
+      titulo,
+      contenido,
+      timestamp: Date.now()
+    };
+
+    this.subnivelActual.tarjetasTexto.push(tarjeta);
+    this.guardarCambios();
+  }
+
+  eliminarTarjetaTexto(index: number): void {
+    if (this.subnivelActual && this.subnivelActual.tarjetasTexto) {
+      this.subnivelActual.tarjetasTexto.splice(index, 1);
+      this.guardarCambios();
+    }
+  }
+
+  // Método para drag-drop de cards
+  drop(event: CdkDragDrop<any[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+
+    // Reordenar el arreglo cacheado
+    moveItemInArray(this.contenidoOrdenado, event.previousIndex, event.currentIndex);
+
+    // Asignar timestamps nuevos en orden para persistir orden (obtenerContenidoOrdenado ordena por timestamp)
+    const base = Date.now();
+    this.contenidoOrdenado.forEach((c, i) => {
+      try {
+        (c.item as any).timestamp = base + i;
+      } catch (e) {
+        // noop
+      }
+    });
+
+    // Guardar cambios y refrescar cache
+    this.guardarCambios();
+  }
+
+  // Refrescar el arreglo cacheado usado por el template y CDK
+  private refreshContenidoOrdenado(): void {
+    this.contenidoOrdenado = this.obtenerContenidoOrdenado();
+  }
+
+  // Actualizar archivo Excel existente
+  actualizarArchivoExcel(excelIndex: number): void {
+    if (!this.subnivelActual) return;
+
+    // Crear input de archivo oculto
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+
+    input.onchange = (event: any) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      this.excelService.leerExcel(file).then(nuevoExcel => {
+        // Validar que tenga datos
+        if (!nuevoExcel.datos || nuevoExcel.datos.length === 0) {
+          alert('Error: El archivo Excel no contiene datos válidos');
+          return;
+        }
+
+        const excelAnterior = this.subnivelActual!.archivosExcel[excelIndex];
+        const columnasAnteriores = excelAnterior.datos[0] || [];
+        const columnasNuevas = nuevoExcel.datos[0] || [];
+
+        // Validar que el nuevo Excel tenga columnas
+        if (columnasNuevas.length === 0) {
+          alert('Error: El archivo Excel no tiene columnas válidas');
+          return;
+        }
+
+        // Verificar gráficas dependientes
+        const graficasDependientes = this.subnivelActual!.graficas.filter(
+          g => g.excelIndex === excelIndex
+        );
+
+        if (graficasDependientes.length > 0) {
+          // Validar que todas las columnas usadas en gráficas existan en el nuevo archivo
+          const columnasUsadas = new Set<string>();
+          graficasDependientes.forEach(grafica => {
+            grafica.columnas.forEach(col => columnasUsadas.add(col));
+          });
+
+          const columnasNoEncontradas = Array.from(columnasUsadas).filter(
+            col => !columnasNuevas.includes(col)
+          );
+
+          if (columnasNoEncontradas.length > 0) {
+            const mensaje = `Advertencia: Las siguientes columnas usadas en gráficas no existen en el nuevo archivo:\n${columnasNoEncontradas.join(', ')}\n\n¿Deseas continuar? Las gráficas se recalcularán pero podrían mostrar datos incorrectos.`;
+            if (!confirm(mensaje)) {
+              return;
+            }
+          }
+        }
+
+        // Actualizar los datos del Excel
+        this.subnivelActual!.archivosExcel[excelIndex] = {
+          nombre: nuevoExcel.nombre,
+          datos: nuevoExcel.datos,
+          tituloPersonalizado: excelAnterior.tituloPersonalizado || excelAnterior.nombre,
+          timestamp: Date.now()
+        };
+
+        // Recalcular gráficas dependientes
+        if (graficasDependientes.length > 0) {
+          this.recalcularGraficasDelExcel(excelIndex);
+        }
+
+        this.guardarCambios();
+        alert('Archivo Excel actualizado correctamente. Las gráficas se han actualizado automáticamente.');
+      }).catch(error => {
+        alert('Error al cargar el archivo Excel: ' + error);
+      });
+    };
+
+    input.click();
+  }
+
+  // Recalcular las gráficas que dependen de un archivo Excel específico
+  private recalcularGraficasDelExcel(excelIndex: number): void {
+    if (!this.subnivelActual) return;
+
+    const excel = this.subnivelActual.archivosExcel[excelIndex];
+    if (!excel || !excel.datos || excel.datos.length === 0) return;
+
+    const headers = excel.datos[0];
+    const filas = excel.datos.slice(1).filter(fila => fila && fila.length > 0);
+
+    // Procesar cada gráfica dependiente
+    this.subnivelActual.graficas.forEach(grafica => {
+      if (grafica.excelIndex === excelIndex) {
+        // Obtener índices de columnas por nombre
+        const columnasIndices = grafica.columnas
+          .map(nombreCol => headers.indexOf(nombreCol))
+          .filter(idx => idx !== -1);
+
+        if (columnasIndices.length === 0) {
+          console.warn(`No se encontraron columnas para la gráfica: ${grafica.tituloPersonalizado}`);
+          return;
+        }
+
+        // Función auxiliar para convertir valores a números cuando sea posible
+        const convertirValor = (valor: any): any => {
+          if (valor === null || valor === undefined || valor === '') {
+            return null;
+          }
+          const num = Number(valor);
+          if (!isNaN(num) && isFinite(num)) {
+            return num;
+          }
+          return valor;
+        };
+
+        // Recalcular datos de la gráfica
+        const datosGrafica = filas.map(fila => {
+          const obj: any = {};
+          columnasIndices.forEach((colIndex, posicion) => {
+            const header = headers[colIndex];
+            const valor = fila[colIndex];
+            // La primera columna se mantiene como string (label)
+            if (posicion === 0) {
+              obj[header] = valor !== null && valor !== undefined ? String(valor) : '';
+            } else {
+              obj[header] = convertirValor(valor);
+            }
+          });
+          return obj;
+        });
+
+        // Filtrar datos válidos (al menos una columna numérica)
+        const datosValidos = datosGrafica.filter(row => {
+          return columnasIndices.slice(1).some(colIndex => {
+            const header = headers[colIndex];
+            return row[header] !== null && row[header] !== undefined && typeof row[header] === 'number';
+          });
+        });
+
+        // Actualizar los datos de la gráfica
+        if (datosValidos.length > 0) {
+          grafica.datos = datosValidos;
+        } else {
+          console.warn(`No hay datos válidos para la gráfica: ${grafica.tituloPersonalizado}`);
+        }
+      }
+    });
   }
 }

@@ -15,7 +15,7 @@ export class GraficaViewerComponent implements OnInit {
 
   public chartData!: ChartConfiguration['data'];
   public chartOptions: ChartConfiguration['options'];
-  public chartType: 'bar' | 'line' = 'bar';
+  public chartType: 'bar' | 'line' | 'pie' | 'radar' = 'bar';
 
   private colores = [
     'rgb(59, 130, 246)',  // blue-500
@@ -24,6 +24,8 @@ export class GraficaViewerComponent implements OnInit {
     'rgb(239, 68, 68)',   // red-500
     'rgb(139, 92, 246)',  // violet-500
     'rgb(236, 72, 153)',  // pink-500
+    'rgb(59, 130, 246)',  // cyan-500
+    'rgb(168, 85, 247)',  // purple-500
   ];
 
   ngOnInit() {
@@ -62,67 +64,141 @@ export class GraficaViewerComponent implements OnInit {
       return label !== null && label !== undefined ? String(label) : '';
     });
 
-    // Resto de columnas son para los datos
-    const datasets = this.grafica.columnas.slice(1).map((col, index) => {
+    // Para gráficas de pastel y radar, solo usamos una serie de datos
+    if (this.chartType === 'pie' || this.chartType === 'radar') {
+      const dataColumn = this.grafica.columnas[1];
       const data = this.grafica.datos.map(row => {
-        const valor = row[col];
-        // Convertir a número si es posible
+        const valor = row[dataColumn];
         if (valor === null || valor === undefined || valor === '') {
-          return 0; // Usar 0 en lugar de null para mantener la longitud
+          return 0;
         }
         const num = Number(valor);
         return !isNaN(num) && isFinite(num) ? num : 0;
       });
 
-      return {
-        label: col,
-        data: data,
-        backgroundColor: this.chartType === 'bar' 
-          ? this.colores[index % this.colores.length] + '80' // Agregar transparencia
-          : 'transparent',
-        borderColor: this.colores[index % this.colores.length],
-        borderWidth: 2,
-        fill: this.chartType === 'line' ? false : undefined,
-        tension: this.chartType === 'line' ? 0.4 : undefined
-      };
-    });
+      const backgroundColor = this.colores.map((color, idx) => {
+        // Convertir RGB a RGBA con transparencia
+        return color.replace('rgb(', 'rgba(').replace(')', ', 0.8)');
+      });
 
-    this.chartData = {
-      labels: labels,
-      datasets: datasets
-    };
+      this.chartData = {
+        labels: labels,
+        datasets: [{
+          label: this.grafica.columnas[1],
+          data: data,
+          backgroundColor: backgroundColor,
+          borderColor: this.colores,
+          borderWidth: 2
+        }]
+      };
+    } else {
+      // Para bar y line, usar múltiples series
+      const datasets = this.grafica.columnas.slice(1).map((col, index) => {
+        const data = this.grafica.datos.map(row => {
+          const valor = row[col];
+          if (valor === null || valor === undefined || valor === '') {
+            return 0;
+          }
+          const num = Number(valor);
+          return !isNaN(num) && isFinite(num) ? num : 0;
+        });
+
+        return {
+          label: col,
+          data: data,
+          backgroundColor: this.chartType === 'bar' 
+            ? this.colores[index % this.colores.length] + '80' // Agregar transparencia
+            : 'transparent',
+          borderColor: this.colores[index % this.colores.length],
+          borderWidth: 2,
+          fill: this.chartType === 'line' ? false : undefined,
+          tension: this.chartType === 'line' ? 0.4 : undefined
+        };
+      });
+
+      this.chartData = {
+        labels: labels,
+        datasets: datasets
+      };
+    }
   }
 
   private configurarOpciones() {
-    this.chartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top'
-        },
-        tooltip: {
-          enabled: true,
-          mode: 'index',
-          intersect: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            precision: 2
-          }
-        },
-        x: {
-          ticks: {
-            maxRotation: 45,
-            minRotation: 0
+    if (this.chartType === 'pie') {
+      this.chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'right'
+          },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: (context) => {
+                const label = context.label || '';
+                const value = context.parsed;
+                return label + ': ' + value;
+              }
+            }
           }
         }
-      }
-    };
+      };
+    } else if (this.chartType === 'radar') {
+      this.chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            enabled: true
+          }
+        },
+        scales: {
+          r: {
+            beginAtZero: true,
+            ticks: {
+              precision: 1
+            }
+          }
+        }
+      };
+    } else {
+      // Bar y Line
+      this.chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            enabled: true,
+            mode: 'index',
+            intersect: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 2
+            }
+          },
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 0
+            }
+          }
+        }
+      };
+    }
   }
 
   eliminar() {
@@ -131,3 +207,4 @@ export class GraficaViewerComponent implements OnInit {
     }
   }
 }
+
