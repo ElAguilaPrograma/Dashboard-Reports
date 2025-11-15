@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Observable } from 'rxjs';
 import { ReportStateService } from './services/report-state.service';
 import { ExcelService } from './services/excel.service';
@@ -530,26 +529,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // Método para drag-drop de cards
-  drop(event: CdkDragDrop<any[]>): void {
-    if (event.previousIndex === event.currentIndex) return;
 
-    // Reordenar el arreglo cacheado
-    moveItemInArray(this.contenidoOrdenado, event.previousIndex, event.currentIndex);
-
-    // Asignar timestamps nuevos en orden para persistir orden (obtenerContenidoOrdenado ordena por timestamp)
-    const base = Date.now();
-    this.contenidoOrdenado.forEach((c, i) => {
-      try {
-        (c.item as any).timestamp = base + i;
-      } catch (e) {
-        // noop
-      }
-    });
-
-    // Guardar cambios y refrescar cache
-    this.guardarCambios();
-  }
 
   // Refrescar el arreglo cacheado usado por el template y CDK
   private refreshContenidoOrdenado(): void {
@@ -700,5 +680,167 @@ export class AppComponent implements OnInit {
         }
       }
     });
+  }
+
+  // Métodos para mejorar la presentación de las tablas
+  isNumeric(value: any): boolean {
+    if (value === null || value === undefined || value === '') {
+      return false;
+    }
+    
+    // Convertir a string y limpiar
+    const stringValue = String(value).trim();
+    
+    // Verificar si es un número válido
+    const numericValue = parseFloat(stringValue.replace(/,/g, ''));
+    return !isNaN(numericValue) && isFinite(numericValue);
+  }
+
+  formatCellData(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    // Si es numérico, formatear con separadores de miles
+    if (this.isNumeric(value)) {
+      const numericValue = parseFloat(String(value).replace(/,/g, ''));
+      
+      // Formatear números enteros sin decimales
+      if (Number.isInteger(numericValue)) {
+        return numericValue.toLocaleString('es-ES');
+      } else {
+        // Formatear números decimales con máximo 2 decimales
+        return numericValue.toLocaleString('es-ES', { 
+          minimumFractionDigits: 0, 
+          maximumFractionDigits: 2 
+        });
+      }
+    }
+
+    // Para texto, retornar tal como está
+    return String(value);
+  }
+
+  // Métodos para mejorar la presentación de imágenes y collages
+  getImageSize(imagen: any): string {
+    // Por ahora retornamos una cadena vacía, se puede implementar la lógica real
+    return '';
+  }
+
+  onImageLoad(event: Event, imagen: any): void {
+    const img = event.target as HTMLImageElement;
+    if (img && imagen) {
+      // Guardar dimensiones de la imagen para mostrar en metadatos
+      imagen.width = img.naturalWidth;
+      imagen.height = img.naturalHeight;
+    }
+  }
+
+  downloadImage(imagen: any): void {
+    if (imagen && imagen.datos) {
+      const link = document.createElement('a');
+      link.href = imagen.datos;
+      link.download = imagen.tituloPersonalizado || imagen.nombre || 'imagen';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+  downloadAllImages(collage: any): void {
+    if (collage && collage.imagenes) {
+      collage.imagenes.forEach((imagen: any, index: number) => {
+        setTimeout(() => {
+          this.downloadImage(imagen);
+        }, index * 500); // Descargar con un pequeño delay entre cada una
+      });
+    }
+  }
+
+  startSlideshow(collage: any): void {
+    // Implementar funcionalidad de presentación
+    if (collage && collage.imagenes && collage.imagenes.length > 0) {
+      // Por ahora expandir la primera imagen
+      this.expandirImagen(collage.imagenes[0]);
+    }
+    console.log('Iniciando presentación:', collage);
+  }
+
+  // Modal de tabla expandida
+  mostrarModalTabla = false;
+  tablaExpandida: any = null;
+  tablaExpandidaIndex = 0;
+  columnaOrdenada = -1;
+  ordenAscendente = true;
+  datosOrdenados: any[] = [];
+
+  expandirTabla(excelIndex: number) {
+    if (!this.subnivelActual) return;
+    this.tablaExpandida = this.subnivelActual.archivosExcel[excelIndex];
+    this.tablaExpandidaIndex = excelIndex;
+    this.datosOrdenados = [...this.tablaExpandida.datos.slice(1)];
+    this.columnaOrdenada = -1;
+    this.mostrarModalTabla = true;
+  }
+
+  cerrarModalTabla() {
+    this.mostrarModalTabla = false;
+    this.tablaExpandida = null;
+    this.datosOrdenados = [];
+  }
+
+  ordenarColumna(columnIndex: number) {
+    if (this.columnaOrdenada === columnIndex) {
+      this.ordenAscendente = !this.ordenAscendente;
+    } else {
+      this.columnaOrdenada = columnIndex;
+      this.ordenAscendente = true;
+    }
+
+    this.datosOrdenados.sort((a, b) => {
+      const aVal = a[columnIndex];
+      const bVal = b[columnIndex];
+      
+      // Verificar si son números
+      const aNum = this.esNumerico(aVal) ? parseFloat(aVal) : aVal;
+      const bNum = this.esNumerico(bVal) ? parseFloat(bVal) : bVal;
+      
+      let comparison = 0;
+      if (aNum < bNum) comparison = -1;
+      if (aNum > bNum) comparison = 1;
+      
+      return this.ordenAscendente ? comparison : -comparison;
+    });
+  }
+
+  esNumerico(valor: any): boolean {
+    return !isNaN(parseFloat(valor)) && isFinite(valor);
+  }
+
+  formatearCelda(valor: any): string {
+    if (valor === null || valor === undefined) return '';
+    if (this.esNumerico(valor)) {
+      const num = parseFloat(valor);
+      return num.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+    }
+    return valor.toString();
+  }
+
+  descargarCSV() {
+    if (!this.tablaExpandida) return;
+    
+    const csvContent = this.tablaExpandida.datos.map((fila: any[]) => 
+      fila.map((celda: any) => `"${celda}"`).join(',')
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${this.tablaExpandida.nombre}.csv`;
+    link.click();
+  }
+
+  imprimirTabla() {
+    window.print();
   }
 }

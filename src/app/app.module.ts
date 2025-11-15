@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, registerables } from 'chart.js';
 
@@ -53,8 +53,8 @@ import { DialogAgregarContenidoComponent } from './components/dialog-agregar-con
     MatCheckboxModule,
     MatFormFieldModule,
     MatIconModule,
-    BaseChartDirective,
-    DragDropModule
+    MatTooltipModule,
+    BaseChartDirective
   ],
   providers: [],
   bootstrap: [AppComponent]

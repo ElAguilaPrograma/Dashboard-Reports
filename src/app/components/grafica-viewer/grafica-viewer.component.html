@@ -1,24 +1,63 @@
-<div class="grafica-content">
-  <div class="grafica-header">
-    <div>
-      <h3 class="text-lg font-semibold text-gray-800">
+<div class="grafica-content professional-chart">
+  <div class="grafica-header chart-header">
+    <div class="chart-info">
+      <h3 class="chart-title">
         {{grafica.tituloPersonalizado || ('Gráfica de ' + grafica.nombreExcel)}}
       </h3>
-      <p class="text-sm text-gray-500">
-        Tipo: {{grafica.tipo === 'bar' ? 'Barras' : 'Líneas'}}
-      </p>
+      <div class="chart-meta">
+        <span class="meta-item">
+          <mat-icon class="meta-icon">{{getChartIcon()}}</mat-icon>
+          {{getChartTypeName()}}
+        </span>
+        <span class="meta-item">
+          <mat-icon class="meta-icon">data_usage</mat-icon>
+          {{getDataPointsCount()}} datos
+        </span>
+        <span class="meta-item" *ngIf="grafica.columnas && grafica.columnas.length > 0">
+          <mat-icon class="meta-icon">view_column</mat-icon>
+          {{grafica.columnas.length}} series
+        </span>
+      </div>
     </div>
-    <button (click)="eliminar()"
-            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-      🗑️ Eliminar
-    </button>
+    <div class="chart-actions">
+      <button type="button" 
+              class="btn-chart-action btn-export"
+              matTooltip="Exportar gráfica"
+              matTooltipPosition="above"
+              (click)="exportChart()">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button type="button" 
+              class="btn-chart-action btn-fullscreen"
+              matTooltip="Ver en pantalla completa"
+              matTooltipPosition="above"
+              (click)="toggleFullscreen()">
+        <mat-icon>fullscreen</mat-icon>
+      </button>
+      <button type="button" 
+              class="btn-chart-action btn-delete"
+              matTooltip="Eliminar gráfica"
+              matTooltipPosition="above"
+              (click)="eliminar()">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
   </div>
   
-  <div class="grafica-container">
-    <canvas baseChart
-            [type]="chartType"
-            [data]="chartData"
-            [options]="chartOptions">
-    </canvas>
+  <div class="grafica-container modern-chart-container">
+    <div class="chart-wrapper">
+      <canvas baseChart
+              [type]="chartType"
+              [data]="chartData"
+              [options]="chartOptions"
+              class="chart-canvas">
+      </canvas>
+    </div>
+    <div class="chart-overlay" *ngIf="isLoading">
+      <div class="chart-loading">
+        <mat-icon class="loading-icon">refresh</mat-icon>
+        <span>Cargando gráfica...</span>
+      </div>
+    </div>
   </div>
 </div>

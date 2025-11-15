@@ -1,13 +1,44 @@
-<header class="header d-flex align-items-center justify-content-between px-4">
-    <div class="d-flex align-items-center">
-        <button (click)="toggleSidebar()" class="btn btn-outline-light me-3 pulse">
-            <i class="bi bi-list"></i>
-        </button>
-        <h1 class="app-title">Dashboard</h1>
+<header class="modern-header">
+  <div class="header-left">
+    <button type="button" 
+            (click)="toggleSidebar()" 
+            class="sidebar-toggle-btn"
+            [class.sidebar-hidden]="!(sidebarVisible$ | async)"
+            matTooltip="Alternar navegación">
+      <mat-icon class="toggle-icon">menu</mat-icon>
+    </button>
+    
+    <div class="header-brand">
+      <div class="brand-icon">
+        <mat-icon class="brand-logo">analytics</mat-icon>
+      </div>
+      <div class="brand-info">
+        <h1 class="brand-title">Radar</h1>
+        <span class="brand-subtitle">Seguridad y Ergonomia</span>
+      </div>
     </div>
+  </div>
 
-    <div class="actions">
-        <!-- Aqui iran las acciones para guardar, cargar y limpiar el contenido-->
+  <div class="header-right">
+    <div class="header-actions">
+      <button type="button" 
+              class="action-btn"
+              matTooltip="Guardar cambios">
+        <mat-icon>save</mat-icon>
+      </button>
+      
+      <button type="button" 
+              class="action-btn"
+              matTooltip="Cargar proyecto">
+        <mat-icon>folder_open</mat-icon>
+      </button>
+      
+      <button type="button" 
+              class="action-btn"
+              matTooltip="Exportar">
+        <mat-icon>download</mat-icon>
+      </button>
     </div>
+  </div>
 </header>
 

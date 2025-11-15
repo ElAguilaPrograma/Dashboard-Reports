@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -8,7 +9,11 @@ import { SidebarService } from '../../services/sidebar.service';
   styleUrl: './header.component.css',
 })
 export class HeaderComponent {
-  constructor(private sidebarService: SidebarService) {}
+  sidebarVisible$: Observable<boolean>;
+  
+  constructor(private sidebarService: SidebarService) {
+    this.sidebarVisible$ = this.sidebarService.sidebarVisible$;
+  }
 
   toggleSidebar(): void {
     this.sidebarService.toggleSidebar();

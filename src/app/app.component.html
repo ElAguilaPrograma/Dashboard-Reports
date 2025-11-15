@@ -1,54 +1,91 @@
-<app-header></app-header>
-<div class="flex h-screen bg-gray-100">
+<div class="app-container">
+  <app-header></app-header>
+  <div class="flex bg-gray-100 main-content">
   <!-- Sidebar -->
-  <div [class.w-80]="(sidebarVisible$ | async)" 
-       [class.w-0]="!(sidebarVisible$ | async)"
-       [hidden]="!(sidebarVisible$ | async)"
-       class="bg-white shadow-lg overflow-y-auto transition-all duration-300">
+  <div [class.sidebar-expanded]="(sidebarVisible$ | async)" 
+       [class.sidebar-collapsed]="!(sidebarVisible$ | async)"
+       class="modern-sidebar sidebar-animated">
     <!-- Tabs Plantas -->
-    <div class="flex border-b">
-      <button *ngFor="let planta of plantas; let i = index"
-              (click)="plantaActiva = i"
-              [class.bg-blue-500]="plantaActiva === i"
-              [class.text-white]="plantaActiva === i"
-              [class.bg-gray-100]="plantaActiva !== i"
-              class="flex-1 py-3 px-4 text-sm font-medium">
-        {{planta.nombre}}
-      </button>
+    <div class="plants-tabs">
+      <div class="tabs-header">
+        <mat-icon class="tabs-icon">eco</mat-icon>
+        <span class="tabs-title">Plantas</span>
+      </div>
+      <div class="tabs-container">
+        <button type="button" *ngFor="let planta of plantas; let i = index"
+                (click)="plantaActiva = i"
+                [class.active]="plantaActiva === i"
+                class="plant-tab">
+          <mat-icon class="plant-icon">local_florist</mat-icon>
+          <span class="plant-name">{{planta.nombre}}</span>
+          <div class="tab-indicator" *ngIf="plantaActiva === i"></div>
+        </button>
+      </div>
     </div>
 
-    <!-- Niveles -->
-    <div class="p-4">
-      <div *ngFor="let nivel of plantas[plantaActiva]?.niveles; let ni = index" 
-           class="mb-2">
-        <button (click)="toggleNivel(ni)"
-                class="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg">
-          <span class="font-semibold">{{nivel.titulo}}</span>
-          <span>{{nivel.collapsed ? '▶' : '▼'}}</span>
-        </button>
-
-        <div *ngIf="!nivel.collapsed" class="ml-4 mt-2 space-y-1">
-          <button *ngFor="let subnivel of nivel.subniveles; let si = index"
-                  (click)="seleccionarSubnivel(ni, si)"
-                  [class.bg-blue-100]="subnivelSeleccionado?.nivelIndex === ni && subnivelSeleccionado?.subnivelIndex === si"
-                  class="w-full text-left p-2 rounded hover:bg-gray-100 text-sm">
-            {{subnivel.titulo || 'Subnivel ' + subnivel.id}}
-            <span *ngIf="subnivel.archivosExcel.length > 0" 
-                  class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-              {{subnivel.archivosExcel.length}} Excel
-            </span>
-            <span *ngIf="subnivel.imagenes.length > 0" 
-                  class="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-              {{subnivel.imagenes.length}} Img
-            </span>
-            <span *ngIf="subnivel.graficas && subnivel.graficas.length > 0" 
-                  class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-              {{subnivel.graficas.length}} Graf
-            </span>
+    <!-- Navegación por Niveles -->
+    <div class="navigation-section">
+      <div class="section-header">
+        <mat-icon class="section-icon">account_tree</mat-icon>
+        <span class="section-title">Navegación</span>
+      </div>
+      
+      <div class="levels-container">
+        <div *ngFor="let nivel of plantas[plantaActiva]?.niveles; let ni = index" 
+             class="level-group">
+          <button type="button" 
+                  (click)="toggleNivel(ni)"
+                  class="level-header"
+                  [class.expanded]="!nivel.collapsed">
+            <div class="level-info">
+              <mat-icon class="level-icon">{{nivel.collapsed ? 'expand_more' : 'expand_less'}}</mat-icon>
+              <span class="level-title">{{nivel.titulo}}</span>
+            </div>
+            <div class="level-stats">
+              <span class="stats-count">{{nivel.subniveles.length}}</span>
+            </div>
           </button>
+
+          <div *ngIf="!nivel.collapsed" class="sublevels-container">
+            <button type="button" 
+                    *ngFor="let subnivel of nivel.subniveles; let si = index"
+                    (click)="seleccionarSubnivel(ni, si)"
+                    [class.active]="subnivelSeleccionado?.nivelIndex === ni && subnivelSeleccionado?.subnivelIndex === si"
+                    class="sublevel-item">
+              <div class="sublevel-main">
+                <mat-icon class="sublevel-icon">description</mat-icon>
+                <div class="sublevel-info">
+                  <span class="sublevel-name">{{subnivel.titulo || 'Subnivel ' + subnivel.id}}</span>
+                  <div class="sublevel-badges">
+                    <span *ngIf="subnivel.archivosExcel.length > 0" 
+                          class="badge excel-badge"
+                          matTooltip="{{subnivel.archivosExcel.length}} archivos Excel">
+                      <mat-icon class="badge-icon">table_chart</mat-icon>
+                      {{subnivel.archivosExcel.length}}
+                    </span>
+                    <span *ngIf="subnivel.imagenes.length > 0" 
+                          class="badge image-badge"
+                          matTooltip="{{subnivel.imagenes.length}} imágenes">
+                      <mat-icon class="badge-icon">image</mat-icon>
+                      {{subnivel.imagenes.length}}
+                    </span>
+                    <span *ngIf="subnivel.graficas && subnivel.graficas.length > 0" 
+                          class="badge chart-badge"
+                          matTooltip="{{subnivel.graficas.length}} gráficas">
+                      <mat-icon class="badge-icon">bar_chart</mat-icon>
+                      {{subnivel.graficas.length}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <mat-icon class="chevron-icon">chevron_right</mat-icon>
+            </button>
+          </div>
         </div>
       </div>
     </div>
+    
+    <!-- Footer del Sidebar -->
   </div>
 
   <!-- Área contenido - Dashboard Grid -->
@@ -85,12 +122,11 @@
         </button>
       </div>
 
-      <!-- Grid Dashboard CON DRAG-DROP -->
-      <div class="dashboard-masonry" cdkDropList [cdkDropListData]="contenidoOrdenado" (cdkDropListDropped)="drop($event)">
+      <!-- Grid Dashboard -->
+      <div class="dashboard-masonry">
         <!-- KPI Card (Pequeña) -->
-        <div *ngIf="subnivelActual.titulo" class="masonry-item masonry-item-small" cdkDrag>
+        <div *ngIf="subnivelActual.titulo" class="masonry-item masonry-item-small">
           <div class="card card-kpi">
-            <div class="drag-handle" cdkDragHandle>⋮⋮</div>
             <h3>Información</h3>
             <p>{{subnivelActual.titulo}}</p>
             <p>{{ subnivelActual.descripcion }}</p>
@@ -104,43 +140,73 @@
           <div *ngIf="contenido.tipo === 'excel'" 
                [class.masonry-item-large]="esTablaGrande(contenido.item)"
                [class.masonry-item-small]="!esTablaGrande(contenido.item)"
-               class="masonry-item" cdkDrag>
+               class="masonry-item">
             <div class="card card-table" [class.is-small-table]="!esTablaGrande(contenido.item)">
-              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
-              <div class="card-header">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-800">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
-                  <p class="text-xs text-gray-500 mt-1">
-                    {{contenido.item.datos.length - 1}} filas × {{contenido.item.datos[0]?.length}} columnas
-                  </p>
+              <div class="card-header table-header">
+                <div class="table-info">
+                  <h3 class="table-title">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
+                  <div class="table-meta">
+                    <span class="meta-item">
+                      <mat-icon class="meta-icon">table_rows</mat-icon>
+                      {{contenido.item.datos.length - 1}} filas
+                    </span>
+                    <span class="meta-item">
+                      <mat-icon class="meta-icon">view_column</mat-icon>
+                      {{contenido.item.datos[0]?.length}} columnas
+                    </span>
+                  </div>
                 </div>
                 <div class="button-group">
-                  <button (click)="abrirModalGrafica(contenido.index)"
-                          class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm transition-colors">
-                    📊 Gráfica
+                  <button type="button" (click)="expandirTabla(contenido.index)"
+                          class="btn-table-action btn-expand"
+                          matTooltip="Expandir tabla en ventana completa"
+                          matTooltipPosition="above">
+                    <mat-icon>fullscreen</mat-icon>
                   </button>
-                  <button (click)="actualizarArchivoExcel(contenido.index)"
-                          class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm transition-colors"
-                          title="Actualizar con nuevo archivo Excel">
-                    🔄 Actualizar
+                  <button type="button" (click)="abrirModalGrafica(contenido.index)"
+                          class="btn-table-action btn-chart"
+                          matTooltip="Crear gráfica a partir de estos datos"
+                          matTooltipPosition="above">
+                    <mat-icon>bar_chart</mat-icon>
                   </button>
-                  <button (click)="eliminarExcel(contenido.index)"
-                          class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm transition-colors">
-                    ✕
+                  <button type="button" (click)="actualizarArchivoExcel(contenido.index)"
+                          class="btn-table-action btn-update"
+                          matTooltip="Actualizar con nuevo archivo Excel"
+                          matTooltipPosition="above">
+                    <mat-icon>refresh</mat-icon>
+                  </button>
+                  <button type="button" (click)="eliminarExcel(contenido.index)"
+                          class="btn-table-action btn-delete"
+                          matTooltip="Eliminar esta tabla"
+                          matTooltipPosition="above">
+                    <mat-icon>delete</mat-icon>
                   </button>
                 </div>
               </div>
 
-              <div class="table-container">
-                <table class="data-table">
+              <div class="table-container professional-table">
+                <table class="data-table modern-table">
                   <thead>
                     <tr>
-                      <th *ngFor="let header of contenido.item.datos[0]">{{header}}</th>
+                      <th *ngFor="let header of contenido.item.datos[0]; let i = index" 
+                          [class.sortable]="true"
+                          class="table-header-cell">
+                        <div class="header-content">
+                          <span class="header-text">{{header}}</span>
+                          <mat-icon class="sort-icon">unfold_more</mat-icon>
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let fila of contenido.item.datos.slice(1)">
-                      <td *ngFor="let celda of fila">{{celda}}</td>
+                    <tr *ngFor="let fila of contenido.item.datos.slice(1); let rowIndex = index" 
+                        class="table-row"
+                        [class.even]="rowIndex % 2 === 0">
+                      <td *ngFor="let celda of fila; let colIndex = index" 
+                          class="table-cell"
+                          [class.numeric]="isNumeric(celda)">
+                        {{formatCellData(celda)}}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -149,22 +215,58 @@
           </div>
 
           <!-- Imagen (ocupan 1 columna) -->
-          <div *ngIf="contenido.tipo === 'imagen'" class="masonry-item masonry-item-small" cdkDrag>
-            <div class="card card-image">
-              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
-              <div class="relative">
-                <img [src]="contenido.item.datos" 
-                     [alt]="contenido.item.tituloPersonalizado || contenido.item.nombre"
-                     class="image-display"
-                     (click)="expandirImagen(contenido.item)">
-                <button (click)="eliminarImagen(contenido.index)"
-                        class="absolute top-2 right-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors">
-                  ✕
-                </button>
+          <div *ngIf="contenido.tipo === 'imagen'" class="masonry-item masonry-item-small">
+            <div class="card card-image professional-image">
+              <div class="image-header">
+                <div class="image-info">
+                  <h3 class="image-title">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
+                  <div class="image-meta">
+                    <span class="meta-item">
+                      <mat-icon class="meta-icon">photo</mat-icon>
+                      Imagen
+                    </span>
+                    <span class="meta-item" *ngIf="getImageSize(contenido.item)">
+                      <mat-icon class="meta-icon">aspect_ratio</mat-icon>
+                      {{getImageSize(contenido.item)}}
+                    </span>
+                  </div>
+                </div>
+                <div class="image-actions">
+                  <button type="button" 
+                          class="btn-image-action btn-fullscreen"
+                          matTooltip="Ver en pantalla completa"
+                          matTooltipPosition="above"
+                          (click)="expandirImagen(contenido.item)">
+                    <mat-icon>fullscreen</mat-icon>
+                  </button>
+                  <button type="button" 
+                          class="btn-image-action btn-download"
+                          matTooltip="Descargar imagen"
+                          matTooltipPosition="above"
+                          (click)="downloadImage(contenido.item)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                  <button type="button" 
+                          class="btn-image-action btn-delete"
+                          matTooltip="Eliminar imagen"
+                          matTooltipPosition="above"
+                          (click)="eliminarImagen(contenido.index)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               </div>
-              <p class="text-xs text-gray-600 mt-2 truncate">
-                {{contenido.item.tituloPersonalizado || contenido.item.nombre}}
-              </p>
+              <div class="image-container modern-image-container">
+                <div class="image-wrapper">
+                  <img [src]="contenido.item.datos" 
+                       [alt]="contenido.item.tituloPersonalizado || contenido.item.nombre"
+                       class="image-display modern-image"
+                       (click)="expandirImagen(contenido.item)"
+                       (load)="onImageLoad($event, contenido.item)">
+                  <div class="image-overlay">
+                    <mat-icon class="zoom-icon">zoom_in</mat-icon>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -172,23 +274,69 @@
           <div *ngIf="contenido.tipo === 'collage'" 
                [class.masonry-item-small]="contenido.item.imagenes.length < 4"
                [class.masonry-item-large]="contenido.item.imagenes.length >= 4"
-               class="masonry-item" cdkDrag>
-            <div class="card card-collage">
-              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
-              <div class="card-header">
-                <h3 class="text-lg font-semibold text-gray-800">{{contenido.item.titulo}}</h3>
-                <button (click)="eliminarCollage(contenido.index)"
-                        class="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors">
-                  ✕
-                </button>
+               class="masonry-item">
+            <div class="card card-collage professional-collage">
+              <div class="collage-header">
+                <div class="collage-info">
+                  <h3 class="collage-title">{{contenido.item.titulo}}</h3>
+                  <div class="collage-meta">
+                    <span class="meta-item">
+                      <mat-icon class="meta-icon">collections</mat-icon>
+                      Collage
+                    </span>
+                    <span class="meta-item">
+                      <mat-icon class="meta-icon">photo_library</mat-icon>
+                      {{contenido.item.imagenes.length}} imágenes
+                    </span>
+                  </div>
+                </div>
+                <div class="collage-actions">
+                  <button type="button" 
+                          class="btn-collage-action btn-slideshow"
+                          matTooltip="Ver presentación"
+                          matTooltipPosition="above"
+                          (click)="startSlideshow(contenido.item)">
+                    <mat-icon>slideshow</mat-icon>
+                  </button>
+                  <button type="button" 
+                          class="btn-collage-action btn-download-all"
+                          matTooltip="Descargar todas"
+                          matTooltipPosition="above"
+                          (click)="downloadAllImages(contenido.item)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                  <button type="button" 
+                          class="btn-collage-action btn-delete"
+                          matTooltip="Eliminar collage"
+                          matTooltipPosition="above"
+                          (click)="eliminarCollage(contenido.index)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               </div>
-              <div class="collage-grid">
-                <div *ngFor="let imagen of contenido.item.imagenes" class="collage-item">
-                  <img [src]="imagen.datos" 
-                       [alt]="imagen.nombre"
-                       class="image-display"
-                       (click)="expandirImagen(imagen)">
-                  <p class="text-xs text-gray-600 mt-1 truncate">{{imagen.nombre}}</p>
+              <div class="collage-container modern-collage-container">
+                <div class="collage-grid modern-grid" 
+                     [class.grid-2]="contenido.item.imagenes.length === 2"
+                     [class.grid-3]="contenido.item.imagenes.length === 3"
+                     [class.grid-4-plus]="contenido.item.imagenes.length >= 4">
+                  <div *ngFor="let imagen of contenido.item.imagenes; let i = index" 
+                       class="collage-item modern-collage-item"
+                       [class.featured]="i === 0 && contenido.item.imagenes.length > 2">
+                    <div class="collage-image-wrapper" 
+                         (click)="expandirImagen(imagen)"
+                         [title]="'Hacer clic para ver ' + imagen.nombre">
+                      <img [src]="imagen.datos" 
+                           [alt]="imagen.nombre"
+                           class="collage-image">
+                      <div class="collage-overlay">
+                        <mat-icon class="zoom-icon">zoom_in</mat-icon>
+                        <div class="image-title-overlay">
+                          <mat-icon class="expand-icon">open_in_full</mat-icon>
+                          {{imagen.nombre}}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -198,9 +346,8 @@
           <div *ngIf="contenido.tipo === 'grafica'" 
                [class.masonry-item-large]="esGraficaGrande(contenido.item)"
                [class.masonry-item-small]="!esGraficaGrande(contenido.item)"
-               class="masonry-item" cdkDrag>
+               class="masonry-item">
             <div class="card-chart-wrapper">
-              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
               <app-grafica-viewer [grafica]="contenido.item"
                                   [index]="contenido.index"
                                   (onEliminar)="eliminarGrafica($event)">
@@ -211,12 +358,11 @@
 
         <!-- Tarjetas de Texto -->
         <ng-container *ngFor="let contenido of contenidoOrdenado">
-          <div *ngIf="contenido.tipo === 'texto'" class="masonry-item masonry-item-small" cdkDrag>
+          <div *ngIf="contenido.tipo === 'texto'" class="masonry-item masonry-item-small">
             <div class="card card-text">
-              <div class="drag-handle" cdkDragHandle>⋮⋮</div>
               <div class="card-header">
                 <h3 class="text-lg font-semibold text-gray-800">{{contenido.item.titulo}}</h3>
-                <button (click)="eliminarTarjetaTexto(contenido.index)"
+                <button type="button" (click)="eliminarTarjetaTexto(contenido.index)"
                         class="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors">
                   ✕
                 </button>
@@ -241,14 +387,37 @@
 </div>
 
 <!-- Modal Imagen Expandida -->
-<div *ngIf="imagenExpandida" class="modal-backdrop" (click)="imagenExpandida = null">
-  <div class="modal-imagen-grande" (click)="$event.stopPropagation()">
-    <button (click)="imagenExpandida = null" class="btn-cerrar-modal">✕</button>
-    <img [src]="imagenExpandida.datos" [alt]="imagenExpandida.nombre" class="imagen-grande">
-    <p class="text-center mt-2 text-gray-600">{{imagenExpandida.tituloPersonalizado || imagenExpandida.nombre}}</p>
+<div *ngIf="imagenExpandida" class="modal-backdrop modern-modal-backdrop" (click)="imagenExpandida = null">
+  <div class="modal-imagen-grande modern-image-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <mat-icon class="modal-icon">photo</mat-icon>
+        <span>{{imagenExpandida.tituloPersonalizado || imagenExpandida.nombre}}</span>
+      </div>
+      <div class="modal-actions">
+        <button type="button" 
+                class="btn-modal-action btn-download-modal"
+                matTooltip="Descargar imagen"
+                (click)="downloadImage(imagenExpandida)">
+          <mat-icon>download</mat-icon>
+        </button>
+        <button type="button" 
+                class="btn-modal-action btn-close-modal"
+                matTooltip="Cerrar"
+                (click)="imagenExpandida = null">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="modal-content">
+      <img [src]="imagenExpandida.datos" 
+           [alt]="imagenExpandida.nombre" 
+           class="imagen-grande modern-expanded-image">
+    </div>
   </div>
 </div>
 
+<!-- Modal de Gráfica -->
 <!-- Modal de Gráfica -->
 <app-modal-grafica *ngIf="mostrarModalGrafica && subnivelActual"
                    [excel]="subnivelActual.archivosExcel[excelIndexSeleccionado]"
@@ -256,3 +425,103 @@
                    (onCrear)="crearGrafica($event)"
                    (onCerrar)="cerrarModalGrafica()">
 </app-modal-grafica>
+
+<!-- Modal de Tabla Expandida -->
+<div *ngIf="mostrarModalTabla" 
+     class="table-modal-backdrop" 
+     (click)="cerrarModalTabla()">
+  <div class="table-modal-container" 
+       (click)="$event.stopPropagation()">
+    <!-- Header del Modal -->
+    <div class="table-modal-header">
+      <div class="modal-title-section">
+        <mat-icon class="modal-icon">table_view</mat-icon>
+        <div class="title-info">
+          <h2 class="modal-title">{{tablaExpandida?.tituloPersonalizado || tablaExpandida?.nombre}}</h2>
+          <span class="modal-subtitle">
+            {{tablaExpandida?.datos.length - 1}} filas × {{tablaExpandida?.datos[0]?.length}} columnas
+          </span>
+        </div>
+      </div>
+      <div class="modal-header-actions">
+        <button type="button" 
+                class="modal-action-btn"
+                matTooltip="Descargar CSV"
+                (click)="descargarCSV()">
+          <mat-icon>download</mat-icon>
+        </button>
+        <button type="button" 
+                class="modal-action-btn"
+                matTooltip="Imprimir tabla"
+                (click)="imprimirTabla()">
+          <mat-icon>print</mat-icon>
+        </button>
+        <button type="button" 
+                class="modal-action-btn close-btn"
+                matTooltip="Cerrar"
+                (click)="cerrarModalTabla()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Contenido del Modal -->
+    <div class="table-modal-content">
+      <div class="table-wrapper">
+        <table class="expanded-table">
+          <thead>
+            <tr>
+              <th *ngFor="let header of tablaExpandida?.datos[0]; let i = index"
+                  class="table-header-cell"
+                  [class.sortable]="true"
+                  (click)="ordenarColumna(i)">
+                <div class="header-content">
+                  <span class="header-text">{{header}}</span>
+                  <mat-icon class="sort-icon" 
+                           *ngIf="columnaOrdenada === i">
+                    {{ordenAscendente ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}}
+                  </mat-icon>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fila of datosOrdenados; let rowIndex = index" 
+                class="table-row"
+                [class.even]="rowIndex % 2 === 0">
+              <td *ngFor="let celda of fila; let colIndex = index" 
+                  class="table-cell"
+                  [class.numeric]="esNumerico(celda)"
+                  [class.highlight]="columnaOrdenada === colIndex">
+                <span class="cell-content">{{formatearCelda(celda)}}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Footer del Modal -->
+    <div class="table-modal-footer">
+      <div class="footer-stats">
+        <div class="stat-item">
+          <mat-icon class="stat-icon">table_rows</mat-icon>
+          <span class="stat-label">Filas:</span>
+          <span class="stat-value">{{tablaExpandida?.datos.length - 1}}</span>
+        </div>
+        <div class="stat-item">
+          <mat-icon class="stat-icon">view_column</mat-icon>
+          <span class="stat-label">Columnas:</span>
+          <span class="stat-value">{{tablaExpandida?.datos[0]?.length}}</span>
+        </div>
+        <div class="stat-item">
+          <mat-icon class="stat-icon">data_usage</mat-icon>
+          <span class="stat-label">Celdas:</span>
+          <span class="stat-value">{{(tablaExpandida?.datos.length - 1) * tablaExpandida?.datos[0]?.length}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>

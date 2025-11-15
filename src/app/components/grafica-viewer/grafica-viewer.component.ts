@@ -28,6 +28,9 @@ export class GraficaViewerComponent implements OnInit {
     'rgb(168, 85, 247)',  // purple-500
   ];
 
+  public isLoading = false;
+  public isFullscreen = false;
+  
   ngOnInit() {
     if (!this.grafica) {
       console.error('No se proporcionó una gráfica válida');
@@ -36,6 +39,42 @@ export class GraficaViewerComponent implements OnInit {
     this.chartType = this.grafica.tipo;
     this.prepararDatos();
     this.configurarOpciones();
+  }
+
+  // Métodos auxiliares para el template
+  getChartIcon(): string {
+    switch (this.grafica.tipo) {
+      case 'bar': return 'bar_chart';
+      case 'line': return 'show_chart';
+      case 'pie': return 'pie_chart';
+      case 'radar': return 'radar';
+      default: return 'analytics';
+    }
+  }
+
+  getChartTypeName(): string {
+    switch (this.grafica.tipo) {
+      case 'bar': return 'Gráfica de Barras';
+      case 'line': return 'Gráfica de Líneas';
+      case 'pie': return 'Gráfica Circular';
+      case 'radar': return 'Gráfica de Radar';
+      default: return 'Gráfica';
+    }
+  }
+
+  getDataPointsCount(): number {
+    return this.grafica?.datos?.length || 0;
+  }
+
+  exportChart(): void {
+    // Implementar exportación de gráfica
+    console.log('Exportando gráfica...');
+  }
+
+  toggleFullscreen(): void {
+    this.isFullscreen = !this.isFullscreen;
+    // Implementar lógica de pantalla completa
+    console.log('Toggle fullscreen:', this.isFullscreen);
   }
 
   private prepararDatos() {
