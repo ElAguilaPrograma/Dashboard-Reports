@@ -58,4 +58,66 @@ mat-form-field {
   box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.3);
 }
 
+/* Estilos específicos para las imágenes del collage */
+.image-container {
+  min-height: 110px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.image-container img {
+  max-width: 100%;
+  max-height: 96px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* Ajuste del grid para mejor distribución */
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(100px, 1fr));
+  }
+}
+
+/* Clases Tailwind personalizadas */
+.gap-3 {
+  gap: 12px;
+}
+
+.max-h-80 {
+  max-height: 20rem;
+}
+
+.h-24 {
+  height: 96px;
+}
+
+.p-4 {
+  padding: 16px;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.rounded-lg {
+  border-radius: 8px;
+}
+
+/* Mejoras para el hover effect */
+.cursor-pointer:hover {
+  transform: scale(1.02);
+}
+
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
 

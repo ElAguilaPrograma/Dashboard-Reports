@@ -60,85 +60,177 @@
         <!-- Contenido (Tablas, Imágenes, Gráficas, Collages) -->
         <ng-container *ngFor="let contenido of contenidoOrdenado; let i = index">
           
-          <!-- Tabla Excel (tamaño dinámico según contenido) -->
-          <div *ngIf="contenido.tipo === 'excel'" 
-               [class.masonry-item-large]="esTablaGrande(contenido.item)"
-               [class.masonry-item-small]="!esTablaGrande(contenido.item)"
-               class="masonry-item">
-            <div class="card card-table" 
-                 [class.is-small-table]="!esTablaGrande(contenido.item)"
-                 [attr.data-columns]="contenido.item.datos[0]?.length">
-              <div class="card-header table-header">
-                <div class="table-info">
-                  <h3 class="table-title">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
-                  <div class="table-meta">
-                    <span class="meta-item">
-                      <mat-icon class="meta-icon">table_rows</mat-icon>
-                      {{contenido.item.datos.length - 1}} filas
-                    </span>
-                    <span class="meta-item">
-                      <mat-icon class="meta-icon">view_column</mat-icon>
-                      {{contenido.item.datos[0]?.length}} columnas
-                    </span>
+          <!-- Archivo Excel - Una o múltiples tablas -->
+          <ng-container *ngIf="contenido.tipo === 'excel'">
+            <!-- Si es un archivo con múltiples tablas -->
+            <ng-container *ngIf="contenido.item.esMultiTabla && contenido.item.tablas">
+              <div *ngFor="let tabla of contenido.item.tablas; let tablaIndex = index" 
+                   [class.masonry-item-large]="esTablaGrande({datos: tabla.datos})"
+                   [class.masonry-item-small]="!esTablaGrande({datos: tabla.datos})"
+                   class="masonry-item">
+                <div class="card card-table multi-table-card" 
+                     [class.is-small-table]="!esTablaGrande({datos: tabla.datos})"
+                     [attr.data-columns]="tabla.datos[0]?.length">
+                  <div class="card-header table-header">
+                    <div class="table-info">
+                      <h3 class="table-title">
+                        {{tabla.titulo}}
+                        <span class="multi-table-badge">Tabla {{tablaIndex + 1}}/{{contenido.item.tablas!.length}}</span>
+                      </h3>
+                      <div class="table-meta">
+                        <span class="meta-item">
+                          <mat-icon class="meta-icon">description</mat-icon>
+                          {{contenido.item.tituloPersonalizado || contenido.item.nombre}}
+                        </span>
+                        <span class="meta-item">
+                          <mat-icon class="meta-icon">table_rows</mat-icon>
+                          {{tabla.datos.length - 1}} filas
+                        </span>
+                        <span class="meta-item">
+                          <mat-icon class="meta-icon">view_column</mat-icon>
+                          {{tabla.datos[0]?.length}} columnas
+                        </span>
+                      </div>
+                    </div>
+                    <div class="button-group">
+                      <button type="button" (click)="expandirTablaIndividual(contenido.index, tablaIndex)"
+                              class="btn-table-action btn-expand"
+                              matTooltip="Expandir tabla en ventana completa"
+                              matTooltipPosition="above">
+                        <mat-icon>fullscreen</mat-icon>
+                      </button>
+                      <button type="button" (click)="abrirModalGraficaTabla(contenido.index, tablaIndex)"
+                              class="btn-table-action btn-chart"
+                              matTooltip="Crear gráfica a partir de esta tabla"
+                              matTooltipPosition="above">
+                        <mat-icon>bar_chart</mat-icon>
+                      </button>
+                      <button type="button" (click)="actualizarArchivoExcel(contenido.index)"
+                              class="btn-table-action btn-update"
+                              matTooltip="Actualizar archivo Excel completo"
+                              matTooltipPosition="above">
+                        <mat-icon>refresh</mat-icon>
+                      </button>
+                      <button type="button" (click)="eliminarTablaIndividual(contenido.index, tablaIndex)"
+                              class="btn-table-action btn-delete"
+                              matTooltip="Eliminar solo esta tabla"
+                              matTooltipPosition="above">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="table-container professional-table">
+                    <table class="data-table modern-table">
+                      <thead>
+                        <tr>
+                          <th *ngFor="let header of tabla.datos[0]; let i = index" 
+                              [class.sortable]="true"
+                              class="table-header-cell">
+                            <div class="header-content">
+                              <span class="header-text">{{header}}</span>
+                              <mat-icon class="sort-icon">unfold_more</mat-icon>
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let fila of tabla.datos.slice(1); let rowIndex = index" 
+                            class="table-row"
+                            [class.even]="rowIndex % 2 === 0">
+                          <td *ngFor="let celda of fila; let colIndex = index" 
+                              class="table-cell"
+                              [class.numeric]="isNumeric(celda)">
+                            {{formatCellData(celda)}}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-                <div class="button-group">
-                  <button type="button" (click)="expandirTabla(contenido.index)"
-                          class="btn-table-action btn-expand"
-                          matTooltip="Expandir tabla en ventana completa"
-                          matTooltipPosition="above">
-                    <mat-icon>fullscreen</mat-icon>
-                  </button>
-                  <button type="button" (click)="abrirModalGrafica(contenido.index)"
-                          class="btn-table-action btn-chart"
-                          matTooltip="Crear gráfica a partir de estos datos"
-                          matTooltipPosition="above">
-                    <mat-icon>bar_chart</mat-icon>
-                  </button>
-                  <button type="button" (click)="actualizarArchivoExcel(contenido.index)"
-                          class="btn-table-action btn-update"
-                          matTooltip="Actualizar con nuevo archivo Excel"
-                          matTooltipPosition="above">
-                    <mat-icon>refresh</mat-icon>
-                  </button>
-                  <button type="button" (click)="eliminarExcel(contenido.index)"
-                          class="btn-table-action btn-delete"
-                          matTooltip="Eliminar esta tabla"
-                          matTooltipPosition="above">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+              </div>
+            </ng-container>
+            
+            <!-- Si es un archivo con tabla única (compatibilidad hacia atrás) -->
+            <div *ngIf="!contenido.item.esMultiTabla" 
+                 [class.masonry-item-large]="esTablaGrande(contenido.item)"
+                 [class.masonry-item-small]="!esTablaGrande(contenido.item)"
+                 class="masonry-item">
+              <div class="card card-table" 
+                   [class.is-small-table]="!esTablaGrande(contenido.item)"
+                   [attr.data-columns]="contenido.item.datos[0]?.length">
+                <div class="card-header table-header">
+                  <div class="table-info">
+                    <h3 class="table-title">{{contenido.item.tituloPersonalizado || contenido.item.nombre}}</h3>
+                    <div class="table-meta">
+                      <span class="meta-item">
+                        <mat-icon class="meta-icon">table_rows</mat-icon>
+                        {{contenido.item.datos.length - 1}} filas
+                      </span>
+                      <span class="meta-item">
+                        <mat-icon class="meta-icon">view_column</mat-icon>
+                        {{contenido.item.datos[0]?.length}} columnas
+                      </span>
+                    </div>
+                  </div>
+                  <div class="button-group">
+                    <button type="button" (click)="expandirTabla(contenido.index)"
+                            class="btn-table-action btn-expand"
+                            matTooltip="Expandir tabla en ventana completa"
+                            matTooltipPosition="above">
+                      <mat-icon>fullscreen</mat-icon>
+                    </button>
+                    <button type="button" (click)="abrirModalGrafica(contenido.index)"
+                            class="btn-table-action btn-chart"
+                            matTooltip="Crear gráfica a partir de estos datos"
+                            matTooltipPosition="above">
+                      <mat-icon>bar_chart</mat-icon>
+                    </button>
+                    <button type="button" (click)="actualizarArchivoExcel(contenido.index)"
+                            class="btn-table-action btn-update"
+                            matTooltip="Actualizar con nuevo archivo Excel"
+                            matTooltipPosition="above">
+                      <mat-icon>refresh</mat-icon>
+                    </button>
+                    <button type="button" (click)="eliminarExcel(contenido.index)"
+                            class="btn-table-action btn-delete"
+                            matTooltip="Eliminar esta tabla"
+                            matTooltipPosition="above">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="table-container professional-table">
+                  <table class="data-table modern-table">
+                    <thead>
+                      <tr>
+                        <th *ngFor="let header of contenido.item.datos[0]; let i = index" 
+                            [class.sortable]="true"
+                            class="table-header-cell">
+                          <div class="header-content">
+                            <span class="header-text">{{header}}</span>
+                            <mat-icon class="sort-icon">unfold_more</mat-icon>
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let fila of contenido.item.datos.slice(1); let rowIndex = index" 
+                          class="table-row"
+                          [class.even]="rowIndex % 2 === 0">
+                        <td *ngFor="let celda of fila; let colIndex = index" 
+                            class="table-cell"
+                            [class.numeric]="isNumeric(celda)">
+                          {{formatCellData(celda)}}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
-
-              <div class="table-container professional-table">
-                <table class="data-table modern-table">
-                  <thead>
-                    <tr>
-                      <th *ngFor="let header of contenido.item.datos[0]; let i = index" 
-                          [class.sortable]="true"
-                          class="table-header-cell">
-                        <div class="header-content">
-                          <span class="header-text">{{header}}</span>
-                          <mat-icon class="sort-icon">unfold_more</mat-icon>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr *ngFor="let fila of contenido.item.datos.slice(1); let rowIndex = index" 
-                        class="table-row"
-                        [class.even]="rowIndex % 2 === 0">
-                      <td *ngFor="let celda of fila; let colIndex = index" 
-                          class="table-cell"
-                          [class.numeric]="isNumeric(celda)">
-                        {{formatCellData(celda)}}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
             </div>
-          </div>
+          </ng-container>
 
           <!-- Imagen (ocupan 1 columna) -->
           <div *ngIf="contenido.tipo === 'imagen'" class="masonry-item masonry-item-small">
@@ -216,14 +308,16 @@
                     </span>
                   </div>
                 </div>
-                <div class="collage-actions">
-                  <button type="button" 
-                          class="btn-collage-action btn-slideshow"
-                          matTooltip="Ver presentación"
-                          matTooltipPosition="above"
-                          (click)="startSlideshow(contenido.item)">
+                <!--
+                <button type="button" 
+                    class="btn-collage-action btn-slideshow"
+                    matTooltip="Ver presentación"
+                    matTooltipPosition="above"
+                    (click)="startSlideshow(contenido.item)">
                     <mat-icon>slideshow</mat-icon>
-                  </button>
+                </button>
+                -->
+                <div class="collage-actions">
                   <button type="button" 
                           class="btn-collage-action btn-download-all"
                           matTooltip="Descargar todas"
@@ -341,8 +435,8 @@
 </div>
 
 <!-- Modal de Gráfica -->
-<app-modal-grafica *ngIf="mostrarModalGrafica && subnivelActual"
-                   [excel]="subnivelActual.archivosExcel[excelIndexSeleccionado]"
+<app-modal-grafica *ngIf="mostrarModalGrafica && archivoExcelTemporal"
+                   [excel]="archivoExcelTemporal"
                    [excelIndex]="excelIndexSeleccionado"
                    (onCrear)="crearGrafica($event)"
                    (onCerrar)="cerrarModalGrafica()">

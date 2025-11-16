@@ -93,6 +93,31 @@ export class AppComponent implements OnInit {
     }
   }
 
+  // Nuevo método para eliminar tabla individual de un archivo multi-tabla
+  eliminarTablaIndividual(excelIndex: number, tablaIndex: number) {
+    if (!this.subnivelActual) return;
+    
+    const archivoExcel = this.subnivelActual.archivosExcel[excelIndex];
+    if (!archivoExcel || !archivoExcel.esMultiTabla || !archivoExcel.tablas) return;
+    
+    // Eliminar la tabla específica
+    archivoExcel.tablas.splice(tablaIndex, 1);
+    
+    // Si solo queda una tabla, convertir a formato simple
+    if (archivoExcel.tablas.length === 1) {
+      archivoExcel.datos = archivoExcel.tablas[0].datos;
+      archivoExcel.esMultiTabla = false;
+      archivoExcel.tablas = [];
+    }
+    
+    // Si no quedan tablas, eliminar el archivo completo
+    if (archivoExcel.tablas.length === 0) {
+      this.subnivelActual.archivosExcel.splice(excelIndex, 1);
+    }
+    
+    this.guardarCambios();
+  }
+
   guardarCambios() {
     if (this.subnivelSeleccionado && this.subnivelActual) {
       this.reportService.actualizarSubnivel(
@@ -107,28 +132,56 @@ export class AppComponent implements OnInit {
   }
 
   abrirModalGrafica(excelIndex: number) {
+    if (!this.subnivelActual) return;
+    
+    const archivoExcel = this.subnivelActual.archivosExcel[excelIndex];
+    this.archivoExcelTemporal = archivoExcel;
+    this.configGraficaTemporal = null; // Limpiar configuración de tabla individual
     this.excelIndexSeleccionado = excelIndex;
     this.mostrarModalGrafica = true;
   }
 
   cerrarModalGrafica() {
     this.mostrarModalGrafica = false;
+    this.configGraficaTemporal = null; // Limpiar configuración temporal
+    this.archivoExcelTemporal = null; // Limpiar archivo temporal
   }
 
   crearGrafica(config: { excelIndex: number; tipo: 'bar' | 'line' | 'pie' | 'radar'; columnas: number[] }) {
-    if (!this.subnivelActual) return;
-
-    const excel = this.subnivelActual.archivosExcel[config.excelIndex];
-    if (!excel || !excel.datos || excel.datos.length === 0) {
-      alert('Error: El archivo Excel no tiene datos válidos');
+    console.log('Crear gráfica recibida:', config);
+    console.log('ArchivoExcelTemporal:', this.archivoExcelTemporal);
+    console.log('ConfigGraficaTemporal:', this.configGraficaTemporal);
+    
+    if (!this.subnivelActual) {
+      console.error('No hay subnivel actual');
       return;
     }
 
-    const headers = excel.datos[0];
-    const filas = excel.datos.slice(1).filter(fila => fila && fila.length > 0); // Filtrar filas vacías
+    let datos: any[][];
+    let nombreGrafica: string;
+    let nombreExcel: string;
+    
+    // Usar archivoExcelTemporal que contiene los datos correctos
+    if (this.archivoExcelTemporal && this.archivoExcelTemporal.datos) {
+      datos = this.archivoExcelTemporal.datos;
+      nombreGrafica = this.archivoExcelTemporal.tituloPersonalizado || this.archivoExcelTemporal.nombre;
+      nombreExcel = this.archivoExcelTemporal.nombre;
+      console.log('Usando archivoExcelTemporal:', nombreExcel);
+    } else {
+      console.error('Error: No hay datos válidos en archivoExcelTemporal');
+      alert('Error: No se pueden obtener los datos para crear la gráfica');
+      return;
+    }
+
+    const headers = datos[0];
+    const filas = datos.slice(1).filter(fila => fila && fila.length > 0); // Filtrar filas vacías
+
+    console.log('Headers:', headers);
+    console.log('Filas filtradas:', filas);
+    console.log('Columnas seleccionadas:', config.columnas);
 
     if (filas.length === 0) {
-      alert('Error: No hay datos válidos en el archivo Excel');
+      alert('Error: No hay datos válidos en la tabla seleccionada');
       return;
     }
 
@@ -171,6 +224,9 @@ export class AppComponent implements OnInit {
       });
     });
 
+    console.log('Datos procesados para gráfica:', datosGrafica);
+    console.log('Datos válidos para gráfica:', datosValidos);
+
     if (datosValidos.length === 0) {
       alert('Error: No se encontraron datos numéricos válidos en las columnas seleccionadas');
       return;
@@ -182,10 +238,14 @@ export class AppComponent implements OnInit {
       datos: datosValidos,
       columnas: config.columnas.map(i => headers[i]),
       excelIndex: config.excelIndex,
-      nombreExcel: excel.nombre || (excel as any).tituloPersonalizado || 'Gráfica'
+      nombreExcel: nombreExcel
     };
     const nombreSugerido = `Gráfica de ${this.configGraficaTemporal.nombreExcel}`;
-    this.cerrarModalGrafica();
+    console.log('Configuración guardada temporalmente:', this.configGraficaTemporal);
+    console.log('Cerrando modal gráfica y abriendo diálogo nombre...');
+    
+    // Solo cerrar el modal visual, NO limpiar las configuraciones aún
+    this.mostrarModalGrafica = false;
     
     const dialogRef = this.dialog.open(DialogNombreGraficaComponent, {
       width: '400px',
@@ -194,22 +254,40 @@ export class AppComponent implements OnInit {
       } as DialogNombreGraficaData
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && this.subnivelActual && this.configGraficaTemporal) {
-        if (!this.subnivelActual.graficas) {
-          this.subnivelActual.graficas = [];
-        }
+    console.log('Diálogo abierto, esperando respuesta...');
+    dialogRef.afterClosed().subscribe({
+      next: (result) => {
+        console.log('Diálogo cerrado con resultado:', result);
+        console.log('Validación - result:', !!result, 'subnivelActual:', !!this.subnivelActual, 'configGraficaTemporal:', !!this.configGraficaTemporal);
+        console.log('configGraficaTemporal contenido:', this.configGraficaTemporal);
+        if (result && this.subnivelActual && this.configGraficaTemporal) {
+          console.log('Creando gráfica con nombre:', result);
+          if (!this.subnivelActual.graficas) {
+            this.subnivelActual.graficas = [];
+          }
 
-        const grafica: any = {
-          ...this.configGraficaTemporal,
-          tituloPersonalizado: result,
-          timestamp: Date.now()
-        };
-        this.subnivelActual.graficas.push(grafica);
-        this.guardarCambios();
+          const grafica: any = {
+            ...this.configGraficaTemporal,
+            tituloPersonalizado: result,
+            timestamp: Date.now()
+          };
+          
+          console.log('Gráfica creada:', grafica);
+          this.subnivelActual.graficas.push(grafica);
+          this.guardarCambios();
+          console.log('Gráfica añadida al subnivel, guardando cambios...');
+        } else {
+          console.log('Diálogo cancelado o sin datos válidos');
+        }
+        
+        // Limpiar configuraciones temporales siempre al final
         this.configGraficaTemporal = null;
-      } else {
+        this.archivoExcelTemporal = null;
+      },
+      error: (error) => {
+        console.error('Error en el diálogo:', error);
         this.configGraficaTemporal = null;
+        this.archivoExcelTemporal = null;
       }
     });
   }
@@ -795,6 +873,49 @@ export class AppComponent implements OnInit {
     this.mostrarModalTabla = true;
   }
 
+  expandirTablaIndividual(excelIndex: number, tablaIndex: number) {
+    if (!this.subnivelActual) return;
+    const archivoExcel = this.subnivelActual.archivosExcel[excelIndex];
+    if (!archivoExcel.tablas || !archivoExcel.tablas[tablaIndex]) return;
+    
+    const tabla = archivoExcel.tablas[tablaIndex];
+    // Crear un objeto temporal que simule un ArchivoExcel para la modal existente
+    this.tablaExpandida = {
+      nombre: `${archivoExcel.nombre} - ${tabla.titulo}`,
+      datos: tabla.datos,
+      tituloPersonalizado: tabla.titulo
+    };
+    this.tablaExpandidaIndex = excelIndex;
+    this.datosOrdenados = [...tabla.datos.slice(1)];
+    this.columnaOrdenada = -1;
+    this.mostrarModalTabla = true;
+  }
+
+  abrirModalGraficaTabla(excelIndex: number, tablaIndex: number) {
+    if (!this.subnivelActual) return;
+    const archivoExcel = this.subnivelActual.archivosExcel[excelIndex];
+    if (!archivoExcel.tablas || !archivoExcel.tablas[tablaIndex]) return;
+    
+    const tabla = archivoExcel.tablas[tablaIndex];
+    
+    // Crear un objeto temporal que simule un ArchivoExcel para el modal de gráfica
+    this.archivoExcelTemporal = {
+      nombre: `${archivoExcel.nombre} - ${tabla.titulo}`,
+      datos: tabla.datos,
+      tituloPersonalizado: tabla.titulo
+    };
+    
+    // Guardar información de la tabla específica para el modal de gráfica
+    this.configGraficaTemporal = {
+      excelIndex: excelIndex,
+      tablaIndex: tablaIndex,
+      tabla: tabla
+    };
+    
+    this.excelIndexSeleccionado = excelIndex;
+    this.mostrarModalGrafica = true;
+  }
+
   cerrarModalTabla() {
     this.mostrarModalTabla = false;
     this.tablaExpandida = null;
@@ -877,5 +998,107 @@ export class AppComponent implements OnInit {
 
   imprimirTabla() {
     window.print();
+  }
+
+  // Métodos para exportación/importación de configuración
+  async exportarConfiguracion() {
+    try {
+      const nombreArchivo = `configuracion-radar-${new Date().toISOString().split('T')[0]}.json`;
+      const success = await this.reportService.exportarConfiguracion(nombreArchivo);
+      
+      if (success) {
+        this.mostrarMensajeExito('Configuración exportada exitosamente');
+      } else {
+        alert('Error al exportar la configuración');
+      }
+    } catch (error) {
+      console.error('Error en exportación:', error);
+      alert('Error al exportar la configuración');
+    }
+  }
+
+  importarConfiguracion() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.multiple = false;
+
+    input.onchange = async (event: any) => {
+      const archivo = event.target.files[0];
+      if (!archivo) return;
+
+      try {
+        const result = await this.reportService.importarConfiguracion(archivo);
+        
+        if (result.success) {
+          this.mostrarMensajeExito('Configuración importada exitosamente. Todos los datos han sido reemplazados.');
+          // Refrescar la vista
+          this.refreshContenidoOrdenado();
+        } else {
+          alert('Error al importar: ' + (result.error || 'Archivo inválido'));
+        }
+      } catch (error) {
+        console.error('Error en importación:', error);
+        alert('Error al procesar el archivo de configuración');
+      }
+    };
+
+    input.click();
+  }
+
+  importarYMezclarConfiguracion() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.multiple = false;
+
+    input.onchange = async (event: any) => {
+      const archivo = event.target.files[0];
+      if (!archivo) return;
+
+      try {
+        const result = await this.reportService.importarYMezclarConfiguracion(archivo);
+        
+        if (result.success) {
+          this.mostrarMensajeExito('Configuración mezclada exitosamente. El contenido se ha añadido a los datos existentes.');
+          // Refrescar la vista
+          this.refreshContenidoOrdenado();
+        } else {
+          alert('Error al importar: ' + (result.error || 'Archivo inválido'));
+        }
+      } catch (error) {
+        console.error('Error en importación:', error);
+        alert('Error al procesar el archivo de configuración');
+      }
+    };
+
+    input.click();
+  }
+
+  private mostrarMensajeExito(mensaje: string) {
+    // Toast de éxito temporal
+    const toast = document.createElement('div');
+    toast.textContent = mensaje;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 10000;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      max-width: 300px;
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
   }
 }

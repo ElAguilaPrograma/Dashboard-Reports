@@ -76,17 +76,26 @@ export class ModalGraficaComponent {
   }
 
   crearGrafica() {
+    console.log('Modal: Crear gráfica solicitada');
+    console.log('Datos del Excel:', this.excel);
+    console.log('Columnas seleccionadas:', this.columnasSeleccionadas);
+    console.log('Tipo de gráfica:', this.tipoGrafica);
+    
     // Para gráficas de pastel y radar, solo necesitamos 2 columnas (etiqueta + datos)
     // Para bar y line, necesitamos al menos 2 columnas
     if (this.columnasSeleccionadas.length < 2) {
       alert('Debe seleccionar al menos 2 columnas');
       return;
     }
-    this.onCrear.emit({
+    
+    const config = {
       excelIndex: this.excelIndex,
       tipo: this.tipoGrafica,
       columnas: this.columnasSeleccionadas
-    });
+    };
+    
+    console.log('Modal: Emitiendo configuración:', config);
+    this.onCrear.emit(config);
   }
 
   cerrar() {

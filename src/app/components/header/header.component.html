@@ -18,25 +18,27 @@
       </div>
     </div>
   </div>
-
   <div class="header-right">
     <div class="header-actions">
       <button type="button" 
               class="action-btn"
-              matTooltip="Guardar cambios">
-        <mat-icon>save</mat-icon>
+              (click)="exportarConfiguracion()"
+              matTooltip="Exportar configuración completa">
+        <mat-icon>file_download</mat-icon>
       </button>
       
       <button type="button" 
               class="action-btn"
-              matTooltip="Cargar proyecto">
-        <mat-icon>folder_open</mat-icon>
+              (click)="importarConfiguracion()"
+              matTooltip="Importar configuración (reemplaza actual)">
+        <mat-icon>file_upload</mat-icon>
       </button>
-      
+
       <button type="button" 
               class="action-btn"
-              matTooltip="Exportar">
-        <mat-icon>download</mat-icon>
+              (click)="importarYMezclar()"
+              matTooltip="Importar y mezclar configuración (mantiene actual)">
+        <mat-icon>merge_type</mat-icon>
       </button>
     </div>
   </div>

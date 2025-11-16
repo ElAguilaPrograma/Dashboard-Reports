@@ -1,8 +1,18 @@
+export interface TablaExcel {
+  titulo?: string;
+  datos: any[][];
+  inicioFila: number;
+  finFila: number;
+  id: string;
+}
+
 export interface ArchivoExcel {
   nombre: string;
-  datos: any[][];
+  datos: any[][]; // Mantener para compatibilidad
+  tablas?: TablaExcel[]; // Nuevo: array de tablas detectadas
   tituloPersonalizado?: string;
   timestamp?: number;
+  esMultiTabla?: boolean; // Flag para identificar archivos con múltiples tablas
 }
 
 export interface Imagen {
