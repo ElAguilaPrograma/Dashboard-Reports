@@ -1,0 +1,57 @@
+<header class="modern-header">
+  <div class="header-left">
+    <button type="button" 
+            (click)="toggleSidebar()" 
+            class="sidebar-toggle-btn"
+            [class.sidebar-hidden]="!(sidebarVisible$ | async)"
+            matTooltip="Alternar navegación">
+      <mat-icon class="toggle-icon">menu</mat-icon>
+    </button>
+    
+    <div class="header-brand">
+      <div class="brand-icon">
+        <mat-icon class="brand-logo">analytics</mat-icon>
+      </div>
+      <div class="brand-info">
+        <h1 class="brand-title">Radar</h1>
+        <span class="brand-subtitle">Seguridad y Ergonomia</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-actions">
+      <button type="button" 
+              class="action-btn"
+              (click)="exportarConfiguracion()"
+              matTooltip="Exportar configuración completa">
+        <mat-icon>file_upload</mat-icon>
+      </button>
+      
+      <button type="button" 
+              class="action-btn"
+              (click)="importarConfiguracion()"
+              matTooltip="Importar configuración (reemplaza actual)">
+        <mat-icon>file_download</mat-icon>
+      </button>
+
+      <!--
+      <button type="button" 
+              class="action-btn"
+              (click)="importarYMezclar()"
+              matTooltip="Importar y mezclar configuración (mantiene actual)">
+        <mat-icon>merge_type</mat-icon>
+      </button> 
+      -->
+
+      <div class="action-separator"></div>
+
+      <button type="button" 
+              class="action-btn danger-btn"
+              (click)="limpiarEntorno()"
+              matTooltip="Limpiar todo el entorno (elimina tablas, imágenes, gráficas, textos)">
+        <mat-icon>clear_all</mat-icon>
+      </button>
+    </div>
+  </div>
+</header>
+

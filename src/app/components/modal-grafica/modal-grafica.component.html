@@ -1,63 +1,112 @@
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
-     (click)="cerrar()">
-  <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" 
-       (click)="$event.stopPropagation()">
-    <h3 class="text-xl font-bold text-gray-800 mb-4">Configurar Gráfica</h3>
-
-    <!-- Tipo de Gráfica -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        Tipo de Gráfica
-      </label>
-      <div class="flex gap-4">
-        <button (click)="tipoGrafica = 'bar'"
-                [class.border-blue-500]="tipoGrafica === 'bar'"
-                [class.bg-blue-50]="tipoGrafica === 'bar'"
-                [class.border-gray-200]="tipoGrafica !== 'bar'"
-                class="flex-1 flex flex-col items-center p-3 rounded-lg border-2 transition-colors">
-          <span class="text-2xl mb-2">📊</span>
-          <span class="text-sm">Barras</span>
-        </button>
-        <button (click)="tipoGrafica = 'line'"
-                [class.border-blue-500]="tipoGrafica === 'line'"
-                [class.bg-blue-50]="tipoGrafica === 'line'"
-                [class.border-gray-200]="tipoGrafica !== 'line'"
-                class="flex-1 flex flex-col items-center p-3 rounded-lg border-2 transition-colors">
-          <span class="text-2xl mb-2">📈</span>
-          <span class="text-sm">Líneas</span>
-        </button>
+<div class="modal-backdrop modern-modal-backdrop" (click)="cerrar()">
+  <div class="modal-container modern-chart-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header chart-config-header">
+      <div class="modal-title">
+        <mat-icon class="modal-icon">analytics</mat-icon>
+        <span>Configurar Gráfica</span>
       </div>
+      <button type="button" 
+              class="btn-modal-action btn-close-modal"
+              matTooltip="Cerrar"
+              (click)="cerrar()">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
 
-    <!-- Selección de Columnas -->
-    <div class="mb-6">
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        Columnas (seleccione al menos 2)
-      </label>
-      <div class="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2">
-        <label *ngFor="let header of headers; let i = index"
-               class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-          <input type="checkbox"
-                 [checked]="isColumnSelected(i)"
-                 (change)="toggleColumna(i)"
-                 class="mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-          <span class="text-sm text-gray-700">{{header}}</span>
-        </label>
+    <div class="modal-content chart-config-content">
+      <div class="config-section">
+        <!-- Sección Izquierda: Tipo de Gráfica -->
+        <div class="chart-type-section">
+          <div class="section-header">
+            <mat-icon class="section-icon">bar_chart</mat-icon>
+            <label class="section-title">Tipo de Gráfica</label>
+          </div>
+          <div class="chart-type-grid">
+            <button type="button" 
+                    (click)="tipoGrafica = 'bar'"
+                    [class.selected]="tipoGrafica === 'bar'"
+                    class="chart-type-btn">
+              <mat-icon class="chart-icon">bar_chart</mat-icon>
+              <span class="chart-label">Barras</span>
+            </button>
+            <button type="button" 
+                    (click)="tipoGrafica = 'line'"
+                    [class.selected]="tipoGrafica === 'line'"
+                    class="chart-type-btn">
+              <mat-icon class="chart-icon">show_chart</mat-icon>
+              <span class="chart-label">Líneas</span>
+            </button>
+            <button type="button" 
+                    (click)="tipoGrafica = 'pie'"
+                    [class.selected]="tipoGrafica === 'pie'"
+                    class="chart-type-btn">
+              <mat-icon class="chart-icon">pie_chart</mat-icon>
+              <span class="chart-label">Circular</span>
+            </button>
+            <button type="button" 
+                    (click)="tipoGrafica = 'radar'"
+                    [class.selected]="tipoGrafica === 'radar'"
+                    class="chart-type-btn">
+              <mat-icon class="chart-icon">radar</mat-icon>
+              <span class="chart-label">Radar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sección Derecha: Selección de Columnas -->
+        <div class="columns-section">
+          <div class="section-header">
+            <mat-icon class="section-icon">view_column</mat-icon>
+            <label class="section-title">
+              Columnas de Datos
+              <span class="section-subtitle">(seleccione al menos 2)</span>
+            </label>
+          </div>
+          <div class="columns-container">
+            <div class="columns-list">
+              <div *ngFor="let header of headers; let i = index"
+                   class="column-item"
+                   [class.selected]="isColumnSelected(i)"
+                   (click)="toggleColumna(i)">
+                <div class="column-checkbox">
+                  <mat-icon *ngIf="isColumnSelected(i)" class="check-icon">check</mat-icon>
+                </div>
+                <div class="column-info">
+                  <span class="column-name">{{header}}</span>
+                  <span class="column-type">{{getColumnType(i)}}</span>
+                </div>
+                <mat-icon class="column-icon">{{getColumnIcon(i)}}</mat-icon>
+              </div>
+            </div>
+            <div class="columns-summary">
+              <div class="summary-item">
+                <mat-icon class="summary-icon">check_circle</mat-icon>
+                <span class="summary-text">{{columnasSeleccionadas.length}} columnas seleccionadas</span>
+              </div>
+              <div class="summary-item" *ngIf="columnasSeleccionadas.length >= 2">
+                <mat-icon class="summary-icon success">verified</mat-icon>
+                <span class="summary-text success">Listo para crear gráfica</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <p class="text-xs text-gray-500 mt-2">
-        Seleccionadas: {{columnasSeleccionadas.length}}
-      </p>
     </div>
 
     <!-- Botones -->
-    <div class="flex gap-3">
-      <button (click)="cerrar()"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+    <div class="modal-footer">
+      <button type="button" 
+              (click)="cerrar()"
+              class="btn-secondary">
+        <mat-icon>close</mat-icon>
         Cancelar
       </button>
-      <button (click)="crearGrafica()"
+      <button type="button" 
+              (click)="crearGrafica()"
               [disabled]="columnasSeleccionadas.length < 2"
-              class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              class="btn-primary"
+              [class.disabled]="columnasSeleccionadas.length < 2">
+        <mat-icon>add_chart</mat-icon>
         Crear Gráfica
       </button>
     </div>

@@ -1,0 +1,27 @@
+::ng-deep {
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+  }
+
+  mat-dialog-content {
+    min-width: 400px;
+    padding: 32px !important;
+
+    mat-form-field {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+  }
+
+  mat-dialog-actions {
+    padding: 24px 32px !important;
+    gap: 12px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+.mt-3 {
+  margin-top: 16px;
+}
+
+

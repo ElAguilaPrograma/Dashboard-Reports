@@ -1,0 +1,119 @@
+<h2 mat-dialog-title>Agregar Contenido</h2>
+
+<mat-dialog-content>
+  <!-- Si no hay tipo seleccionado, mostrar opciones -->
+  <div *ngIf="!tipoSeleccionado" class="opciones-container">
+    <p class="mb-6 text-gray-600">Selecciona el tipo de contenido que deseas agregar:</p>
+
+    <div class="opciones-grid">
+      <!-- Opción Excel -->
+      <button mat-raised-button (click)="seleccionarTipo('excel')" class="opcion-button opcion-excel">
+        <div class="opcion-icon">📊</div>
+        <div class="opcion-titulo">Archivo Excel</div>
+      </button>
+
+      <!-- Opción Imágenes -->
+      <button mat-raised-button (click)="seleccionarTipo('imagenes')" class="opcion-button opcion-imagenes">
+        <div class="opcion-icon">🖼️</div>
+        <div class="opcion-titulo">Imágenes</div>
+      </button>
+
+      <!-- Opción Collage -->
+      <button mat-raised-button (click)="seleccionarTipo('collage')" class="opcion-button opcion-collage">
+        <div class="opcion-icon">🎨</div>
+        <div class="opcion-titulo">Crear Collage</div>
+      </button>
+
+      <!-- Opción Texto -->
+      <button mat-raised-button (click)="seleccionarTipo('texto')" class="opcion-button opcion-texto">
+        <div class="opcion-icon">📝</div>
+        <div class="opcion-titulo">Tarjeta de Texto</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulario para tarjeta de texto -->
+  <div *ngIf="tipoSeleccionado === 'texto'" class="formulario-texto">
+    <p class="mb-4 text-gray-600">Crea una nueva tarjeta de texto:</p>
+
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Título</mat-label>
+      <input matInput [(ngModel)]="tituloTexto" 
+             placeholder="Ingrese el título de la tarjeta"
+             autofocus>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Contenido</mat-label>
+      <textarea matInput [(ngModel)]="contenidoTexto" 
+                placeholder="Ingrese el contenido de texto"
+                rows="6"></textarea>
+    </mat-form-field>
+  </div>
+
+  <!-- Zona de carga para Excel -->
+  <div *ngIf="tipoSeleccionado === 'excel'" class="carga-archivo">
+    <p class="mb-4 text-gray-600">Selecciona un archivo Excel:</p>
+    <label class="flex items-center justify-center w-full px-6 py-8 border-2 border-dashed border-blue-500 rounded-lg cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-colors">
+      <span class="text-center">
+        <span class="text-4xl">📊</span>
+        <p class="text-sm font-medium text-blue-600 mt-2">Haz clic para seleccionar o arrastra un archivo</p>
+        <p class="text-xs text-blue-500 mt-1">(.xlsx, .xls)</p>
+      </span>
+      <input type="file" 
+             accept=".xlsx,.xls" 
+             (change)="onExcelSelected($event)"
+             class="hidden">
+    </label>
+  </div>
+
+  <!-- Zona de carga para Imágenes -->
+  <div *ngIf="tipoSeleccionado === 'imagenes'" class="carga-archivo">
+    <p class="mb-4 text-gray-600">Selecciona una o más imágenes:</p>
+    <label class="flex items-center justify-center w-full px-6 py-8 border-2 border-dashed border-purple-500 rounded-lg cursor-pointer hover:border-purple-600 hover:bg-purple-50 transition-colors">
+      <span class="text-center">
+        <span class="text-4xl">🖼️</span>
+        <p class="text-sm font-medium text-purple-600 mt-2">Haz clic para seleccionar o arrastra imágenes</p>
+        <p class="text-xs text-purple-500 mt-1">Puedes seleccionar múltiples archivos</p>
+      </span>
+      <input type="file" 
+             accept="image/*" 
+             multiple
+             (change)="onImagenesSelected($event)"
+             class="hidden">
+    </label>
+  </div>
+
+  <!-- Opción para crear collage -->
+  <div *ngIf="tipoSeleccionado === 'collage'" class="collage-info">
+    <p class="text-gray-600">Se abrirá el diálogo para crear un collage con tus imágenes.</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+
+  <!-- Botones específicos para texto -->
+  <button *ngIf="tipoSeleccionado === 'texto'" 
+          mat-raised-button 
+          color="primary"
+          [disabled]="!tituloTexto.trim()"
+          (click)="onConfirmarTexto()">
+    Crear Tarjeta
+  </button>
+
+  <!-- Botón de atrás para otros tipos -->
+  <button *ngIf="tipoSeleccionado && tipoSeleccionado !== 'texto'" 
+          mat-button 
+          (click)="tipoSeleccionado = null">
+    Atrás
+  </button>
+
+  <!-- Botón para collage -->
+  <button *ngIf="tipoSeleccionado === 'collage'" 
+          mat-raised-button 
+          color="primary"
+          (click)="onCrearCollage()">
+    Crear Collage
+  </button>
+</mat-dialog-actions>
