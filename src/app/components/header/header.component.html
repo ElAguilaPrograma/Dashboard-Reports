@@ -24,21 +24,32 @@
               class="action-btn"
               (click)="exportarConfiguracion()"
               matTooltip="Exportar configuración completa">
-        <mat-icon>file_download</mat-icon>
+        <mat-icon>file_upload</mat-icon>
       </button>
       
       <button type="button" 
               class="action-btn"
               (click)="importarConfiguracion()"
               matTooltip="Importar configuración (reemplaza actual)">
-        <mat-icon>file_upload</mat-icon>
+        <mat-icon>file_download</mat-icon>
       </button>
 
+      <!--
       <button type="button" 
               class="action-btn"
               (click)="importarYMezclar()"
               matTooltip="Importar y mezclar configuración (mantiene actual)">
         <mat-icon>merge_type</mat-icon>
+      </button> 
+      -->
+
+      <div class="action-separator"></div>
+
+      <button type="button" 
+              class="action-btn danger-btn"
+              (click)="limpiarEntorno()"
+              matTooltip="Limpiar todo el entorno (elimina tablas, imágenes, gráficas, textos)">
+        <mat-icon>clear_all</mat-icon>
       </button>
     </div>
   </div>

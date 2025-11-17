@@ -101,6 +101,42 @@ export class HeaderComponent {
     input.click();
   }
 
+  limpiarEntorno() {
+    const mensaje = '¿Estás completamente seguro de que quieres limpiar TODO el entorno?\n\n' +
+                   'Esto eliminará PERMANENTEMENTE:\n' +
+                   '• Todas las tablas Excel\n' +
+                   '• Todas las imágenes\n' +
+                   '• Todas las gráficas\n' +
+                   '• Todos los textos\n\n' +
+                   'Esta acción NO se puede deshacer.';
+    
+    if (!confirm(mensaje)) {
+      return;
+    }
+
+    // Doble confirmación para mayor seguridad
+    if (!confirm('\u00daLTIMA CONFIRMACIÓN: \u00bfEliminar TODO el contenido del entorno?')) {
+      return;
+    }
+
+    try {
+      const success = this.reportService.limpiarTodoElEntorno();
+      
+      if (success) {
+        this.mostrarMensajeExito('Entorno limpiado exitosamente. Todos los datos han sido eliminados.');
+        // Recargar página para refrescar completamente la interfaz
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        alert('Error al limpiar el entorno');
+      }
+    } catch (error) {
+      console.error('Error al limpiar entorno:', error);
+      alert('Error al limpiar el entorno');
+    }
+  }
+
   private mostrarMensajeExito(mensaje: string) {
     const toast = document.createElement('div');
     toast.textContent = mensaje;

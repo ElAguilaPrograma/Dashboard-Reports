@@ -229,6 +229,35 @@
   }
 }
 
+/* Separator for action groups */
+.action-separator {
+  width: 1px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 8px;
+}
+
+/* Danger button styling */
+.danger-btn {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.danger-btn:hover {
+  background: rgba(239, 68, 68, 0.3) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.25) !important;
+}
+
+.danger-btn mat-icon {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.danger-btn:hover mat-icon {
+  color: white !important;
+  transform: scale(1.15) !important;
+}
+
 @media (max-width: 480px) {
   .header-actions .action-btn:first-child {
     display: flex;

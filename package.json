@@ -1,6 +1,8 @@
 {
   "name": "informe-plantas",
   "version": "1.0.0",
+  "description": "Dashboard de Informes de Plantas para visualizar, sheets, graficas, imagenes y textos",
+  "author": "ElAguilaPrograma",
   "main": "electron/main.js",
   "scripts": {
     "ng": "ng",
@@ -29,27 +31,30 @@
       "!node_modules/**/*",
       "node_modules/electron/**/*"
     ],
-    "extraResources": [
-      {
-        "from": "src/assets",
-        "to": "assets",
-        "filter": ["**/*"]
-      }
-    ],
+    "extraResources": [],
     "win": {
       "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
         {
           "target": "nsis",
           "arch": ["x64"]
         },
         {
-          "target": "portable",
+          "target": "msi",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
           "arch": ["x64"]
         }
       ],
-      "icon": "src/assets/icon.ico",
       "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "verifyUpdateCodeSignature": false,
+      "forceCodeSigning": false
     },
     "nsis": {
       "oneClick": false,
@@ -59,6 +64,14 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Informe Plantas"
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Informe Plantas",
+      "runAfterFinish": true
     },
     "portable": {
       "artifactName": "${productName}-${version}-portable.${ext}"

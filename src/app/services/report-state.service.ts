@@ -144,6 +144,12 @@ export class ReportStateService {
       const plantasActuales = [...this.getPlantas()];
       const plantasImportadas = this.migrarNombresNiveles(result.plantas);
       
+      console.log('Mezclando configuración...');
+      console.log('Plantas actuales:', plantasActuales.length);
+      console.log('Plantas importadas:', plantasImportadas.length);
+      
+      let totalElementosMezclados = 0;
+      
       // Mezclar datos: mantener estructura actual pero añadir contenido importado
       plantasImportadas.forEach((plantaImportada, plantaIndex) => {
         if (plantaIndex < plantasActuales.length) {
@@ -153,19 +159,64 @@ export class ReportStateService {
                 if (subnivelIndex < plantasActuales[plantaIndex].niveles[nivelIndex].subniveles.length) {
                   const subnivelActual = plantasActuales[plantaIndex].niveles[nivelIndex].subniveles[subnivelIndex];
                   
-                  // Mezclar contenido
-                  if (subnivelImportado.archivosExcel?.length) {
-                    subnivelActual.archivosExcel = [...(subnivelActual.archivosExcel || []), ...subnivelImportado.archivosExcel];
+                  let elementosEnEsteSubnivel = 0;
+                  
+                  // Mezclar archivos Excel
+                  if (subnivelImportado.archivosExcel && subnivelImportado.archivosExcel.length > 0) {
+                    if (!subnivelActual.archivosExcel) {
+                      subnivelActual.archivosExcel = [];
+                    }
+                    // Añadir timestamp único para evitar duplicados
+                    const archivosConTimestamp = subnivelImportado.archivosExcel.map(archivo => ({
+                      ...archivo,
+                      timestamp: Date.now() + Math.random()
+                    }));
+                    subnivelActual.archivosExcel.push(...archivosConTimestamp);
+                    elementosEnEsteSubnivel += subnivelImportado.archivosExcel.length;
+                    console.log(`Mezclados ${subnivelImportado.archivosExcel.length} archivos Excel en P${plantaIndex+1}-N${nivelIndex+1}-S${subnivelIndex+1}`);
                   }
-                  if (subnivelImportado.imagenes?.length) {
-                    subnivelActual.imagenes = [...(subnivelActual.imagenes || []), ...subnivelImportado.imagenes];
+                  
+                  // Mezclar imágenes
+                  if (subnivelImportado.imagenes && subnivelImportado.imagenes.length > 0) {
+                    if (!subnivelActual.imagenes) {
+                      subnivelActual.imagenes = [];
+                    }
+                    subnivelActual.imagenes.push(...subnivelImportado.imagenes);
+                    elementosEnEsteSubnivel += subnivelImportado.imagenes.length;
+                    console.log(`Mezcladas ${subnivelImportado.imagenes.length} imágenes en P${plantaIndex+1}-N${nivelIndex+1}-S${subnivelIndex+1}`);
                   }
-                  if (subnivelImportado.graficas?.length) {
-                    subnivelActual.graficas = [...(subnivelActual.graficas || []), ...subnivelImportado.graficas];
+                  
+                  // Mezclar gráficas
+                  if (subnivelImportado.graficas && subnivelImportado.graficas.length > 0) {
+                    if (!subnivelActual.graficas) {
+                      subnivelActual.graficas = [];
+                    }
+                    // Añadir timestamp único para evitar duplicados
+                    const graficasConTimestamp = subnivelImportado.graficas.map(grafica => ({
+                      ...grafica,
+                      timestamp: Date.now() + Math.random()
+                    }));
+                    subnivelActual.graficas.push(...graficasConTimestamp);
+                    elementosEnEsteSubnivel += subnivelImportado.graficas.length;
+                    console.log(`Mezcladas ${subnivelImportado.graficas.length} gráficas en P${plantaIndex+1}-N${nivelIndex+1}-S${subnivelIndex+1}`);
                   }
-                  if (subnivelImportado.tarjetasTexto?.length) {
-                    subnivelActual.tarjetasTexto = [...(subnivelActual.tarjetasTexto || []), ...subnivelImportado.tarjetasTexto];
+                  
+                  // Mezclar tarjetas de texto
+                  if (subnivelImportado.tarjetasTexto && subnivelImportado.tarjetasTexto.length > 0) {
+                    if (!subnivelActual.tarjetasTexto) {
+                      subnivelActual.tarjetasTexto = [];
+                    }
+                    // Añadir timestamp único para evitar duplicados
+                    const textosConTimestamp = subnivelImportado.tarjetasTexto.map(texto => ({
+                      ...texto,
+                      timestamp: Date.now() + Math.random()
+                    }));
+                    subnivelActual.tarjetasTexto.push(...textosConTimestamp);
+                    elementosEnEsteSubnivel += subnivelImportado.tarjetasTexto.length;
+                    console.log(`Mezcladas ${subnivelImportado.tarjetasTexto.length} tarjetas de texto en P${plantaIndex+1}-N${nivelIndex+1}-S${subnivelIndex+1}`);
                   }
+                  
+                  totalElementosMezclados += elementosEnEsteSubnivel;
                 }
               });
             }
@@ -173,10 +224,32 @@ export class ReportStateService {
         }
       });
       
-      this.actualizarPlantas(plantasActuales);
-      return { success: true };
+      console.log(`Total de elementos mezclados: ${totalElementosMezclados}`);
+      
+      if (totalElementosMezclados > 0) {
+        this.actualizarPlantas(plantasActuales);
+        console.log('Configuración mezclada exitosamente');
+        return { success: true };
+      } else {
+        return { success: false, error: 'No se encontraron elementos para mezclar en el archivo importado' };
+      }
     }
     
     return { success: false, error: result.error };
+  }
+
+  /**
+   * Limpia completamente todo el entorno, eliminando todos los datos
+   */
+  limpiarTodoElEntorno(): boolean {
+    try {
+      // Regenerar estructura inicial completamente limpia
+      const plantasLimpias = this.generarEstructuraInicial();
+      this.actualizarPlantas(plantasLimpias);
+      return true;
+    } catch (error) {
+      console.error('Error al limpiar entorno:', error);
+      return false;
+    }
   }
 }
