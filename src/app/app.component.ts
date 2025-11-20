@@ -70,6 +70,10 @@ export class AppComponent implements OnInit {
     this.actualizarSubnivelActual();
   }
 
+  onEditarNombrePlanta(event: { plantaIndex: number; nombrePersonalizado: string | null }) {
+    this.reportService.actualizarNombrePlanta(event.plantaIndex, event.nombrePersonalizado);
+  }
+
   private actualizarSubnivelActual() {
     if (this.subnivelSeleccionado && this.plantas[this.plantaActiva]) {
       this.subnivelActual = this.plantas[this.plantaActiva]

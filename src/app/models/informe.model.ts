@@ -56,5 +56,6 @@ export interface Nivel {
 export interface Planta {
   id: number;
   nombre: string;
+  nombrePersonalizado?: string; // Nombre personalizado visible al usuario
   niveles: Nivel[];
 }

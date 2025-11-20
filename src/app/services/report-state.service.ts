@@ -111,6 +111,23 @@ export class ReportStateService {
   }
 
   /**
+   * Actualiza el nombre personalizado de una planta
+   */
+  actualizarNombrePlanta(plantaIndex: number, nombrePersonalizado: string | null) {
+    const plantas = [...this.plantasSubject.value];
+    if (plantaIndex >= 0 && plantaIndex < plantas.length) {
+      if (nombrePersonalizado === null) {
+        // Eliminar nombre personalizado (restaurar original)
+        delete plantas[plantaIndex].nombrePersonalizado;
+      } else {
+        // Asignar nuevo nombre personalizado
+        plantas[plantaIndex].nombrePersonalizado = nombrePersonalizado;
+      }
+      this.actualizarPlantas(plantas);
+    }
+  }
+
+  /**
    * Exporta toda la configuración actual a un archivo
    */
   async exportarConfiguracion(nombreArchivo?: string): Promise<boolean> {

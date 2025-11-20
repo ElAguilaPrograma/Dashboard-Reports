@@ -6,9 +6,10 @@
     [plantas]="plantas"
     [plantaActiva]="plantaActiva"
     [subnivelSeleccionado]="subnivelSeleccionado"
-    (plantaActivaChange)="plantaActiva = $event"
+    (plantaActivaChange)="onPlantaActivaChange($event)"
     (toggleNivelEvent)="toggleNivel($event)"
-    (seleccionarSubnivelEvent)="seleccionarSubnivel($event.nivelIndex, $event.subnivelIndex)">
+    (seleccionarSubnivelEvent)="seleccionarSubnivel($event.nivelIndex, $event.subnivelIndex)"
+    (editarNombrePlantaEvent)="onEditarNombrePlanta($event)">
   </app-sidebar>
 
   <!-- Área contenido - Dashboard Grid -->
