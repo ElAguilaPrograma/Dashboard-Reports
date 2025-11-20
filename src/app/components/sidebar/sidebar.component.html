@@ -9,14 +9,24 @@
       <span class="tabs-title">Plantas</span>
     </div>
     <div class="tabs-container">
-      <button type="button" *ngFor="let planta of plantas; let i = index"
-              (click)="onPlantaClick(i)"
-              [class.active]="plantaActiva === i"
-              class="plant-tab">
-        <mat-icon class="plant-icon">local_florist</mat-icon>
-        <span class="plant-name">{{planta.nombre}}</span>
-        <div class="tab-indicator" *ngIf="plantaActiva === i"></div>
-      </button>
+      <div *ngFor="let planta of plantas; let i = index"
+           class="plant-tab-wrapper">
+        <button type="button"
+                (click)="onPlantaClick(i)"
+                [class.active]="plantaActiva === i"
+                class="plant-tab">
+          <mat-icon class="plant-icon">local_florist</mat-icon>
+          <span class="plant-name">{{getNombrePlanta(planta)}}</span>
+          <button type="button"
+                  (click)="onEditarNombrePlanta($event, i)"
+                  class="edit-plant-button"
+                  matTooltip="Editar nombre de planta"
+                  matTooltipPosition="above">
+            <mat-icon class="edit-icon">edit</mat-icon>
+          </button>
+          <div class="tab-indicator" *ngIf="plantaActiva === i"></div>
+        </button>
+      </div>
     </div>
   </div>
 

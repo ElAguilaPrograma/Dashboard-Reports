@@ -294,38 +294,42 @@ export class GraficaViewerComponent implements OnInit, AfterViewInit {
   }
 
   private configurarOpciones() {
+    // Opciones base para reducir uso de GPU
+    const opcionesBase = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 0 // Deshabilitar animaciones para reducir GPU
+      },
+      plugins: {
+        legend: {
+          display: true
+        },
+        tooltip: {
+          enabled: true
+        }
+      }
+    };
+
     if (this.chartType === 'pie') {
       this.chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
+        ...opcionesBase,
         plugins: {
+          ...opcionesBase.plugins,
           legend: {
             display: true,
             position: 'right'
-          },
-          tooltip: {
-            enabled: true,
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = context.parsed;
-                return label + ': ' + value;
-              }
-            }
           }
         }
       };
     } else if (this.chartType === 'radar') {
       this.chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
+        ...opcionesBase,
         plugins: {
+          ...opcionesBase.plugins,
           legend: {
             display: true,
             position: 'top'
-          },
-          tooltip: {
-            enabled: true
           }
         },
         scales: {
@@ -340,17 +344,12 @@ export class GraficaViewerComponent implements OnInit, AfterViewInit {
     } else {
       // Bar y Line
       this.chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
+        ...opcionesBase,
         plugins: {
+          ...opcionesBase.plugins,
           legend: {
             display: true,
             position: 'top'
-          },
-          tooltip: {
-            enabled: true,
-            mode: 'index',
-            intersect: false
           }
         },
         scales: {

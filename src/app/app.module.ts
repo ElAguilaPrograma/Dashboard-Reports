@@ -28,6 +28,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { DialogEditarTituloComponent } from './components/dialog-editar-titulo/dialog-editar-titulo.component';
 import { DialogAgregarContenidoComponent } from './components/dialog-agregar-contenido/dialog-agregar-contenido.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { DialogEditarNombrePlantaComponent } from './components/dialog-editar-nombre-planta/dialog-editar-nombre-planta.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +42,8 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
     HeaderComponent,
     DialogEditarTituloComponent,
     DialogAgregarContenidoComponent,
-    SidebarComponent
+    SidebarComponent,
+    DialogEditarNombrePlantaComponent
   ],
   imports: [
     BrowserModule,

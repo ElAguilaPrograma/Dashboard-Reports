@@ -1,0 +1,51 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title class="dialog-title">
+    <mat-icon class="title-icon">edit</mat-icon>
+    Editar Nombre de Planta
+  </h2>
+  
+  <mat-dialog-content class="dialog-content">
+    <div class="info-box">
+      <mat-icon class="info-icon">info</mat-icon>
+      <div class="info-text">
+        <p><strong>Nombre original:</strong> {{data.nombreActual}}</p>
+        <p class="help-text">El nombre personalizado es solo visual y no afecta la funcionalidad del sistema.</p>
+      </div>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre Personalizado</mat-label>
+      <input matInput 
+             [(ngModel)]="nombrePersonalizado"
+             placeholder="Ingrese un nombre personalizado"
+             maxlength="50"
+             autofocus>
+      <mat-hint align="end">{{nombrePersonalizado.length}}/50</mat-hint>
+      <mat-icon matPrefix>local_florist</mat-icon>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <button mat-stroked-button 
+            color="accent"
+            (click)="onRestaurar()"
+            class="action-button">
+      <mat-icon>refresh</mat-icon>
+      Restaurar Original
+    </button>
+    <div class="spacer"></div>
+    <button mat-button 
+            (click)="onCancelar()"
+            class="action-button">
+      Cancelar
+    </button>
+    <button mat-raised-button 
+            color="primary"
+            (click)="onGuardar()"
+            [disabled]="!nombrePersonalizado || !nombrePersonalizado.trim()"
+            class="action-button">
+      <mat-icon>save</mat-icon>
+      Guardar
+    </button>
+  </mat-dialog-actions>
+</div>

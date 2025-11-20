@@ -211,7 +211,6 @@ Linux: ~/.config/informe-plantas/
 #### Exportación/Importación
 - **Exportar Configuración**: Backup completo en formato JSON
 - **Importar y Reemplazar**: Restauración completa de configuración
-- **Importar y Mezclar**: Añadir contenido sin eliminar datos existentes
 - **Limpiar Entorno**: Reset completo a estado inicial
 
 ### 4. Interface de Usuario

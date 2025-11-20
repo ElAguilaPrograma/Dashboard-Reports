@@ -3,6 +3,12 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 
+// Optimizaciones de rendimiento para reducir uso de GPU
+app.commandLine.appendSwitch('disable-features', 'HardwareMediaKeyHandling');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('max-active-webgl-contexts', '4'); // Limitar contextos WebGL
+
 let mainWindow;
 let indexPath; // Variable para almacenar la ruta del index
 
@@ -17,7 +23,11 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      // Optimizaciones de rendimiento
+      backgroundThrottling: true,
+      offscreen: false,
+      spellcheck: false
     },
     // Ocultar la barra de menú nativa por defecto
     autoHideMenuBar: true,

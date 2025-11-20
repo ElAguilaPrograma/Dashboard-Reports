@@ -1,6 +1,6 @@
 {
   "name": "informe-plantas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dashboard de Informes de Plantas para visualizar, sheets, graficas, imagenes y textos",
   "author": "ElAguilaPrograma",
   "main": "electron/main.js",
@@ -36,19 +36,27 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "msi",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "${productName}-${version}-${arch}.${ext}",
@@ -80,7 +88,7 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "^20.3.10",
-    "@angular/cdk": "^20.2.13",
+    "@angular/cdk": "^20.2.14",
     "@angular/common": "^20.3.10",
     "@angular/compiler": "^20.3.10",
     "@angular/core": "^20.3.10",
